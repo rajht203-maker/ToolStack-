@@ -1,0 +1,6 @@
+{
+  "name": "ToolStack",
+  "description": "All-in-one free online tools platform with 1,200+ utilities including PDF & image suites, developer tools, calculators, converters, security keys, SEO, social media, AI scaffolding, and bilingual English & Hi-English (Hinglish) problem solving search.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
