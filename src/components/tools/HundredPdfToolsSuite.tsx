@@ -44,7 +44,8 @@ import {
   Package,
   Barcode,
   Building,
-  UserCheck
+  UserCheck,
+  ExternalLink
 } from 'lucide-react';
 
 interface HundredPdfToolsSuiteProps {
@@ -871,27 +872,94 @@ export const HundredPdfToolsSuite: React.FC<HundredPdfToolsSuiteProps> = ({ tool
             )}
 
             {(tool.id === 'pdf-receipt-voucher-generator' || tool.id === 'pdf-header-banner-stamped') && (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Organization / Issuer</label>
-                  <input
-                    type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full mt-1 p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white"
-                  />
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Organization / Issuer</label>
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="e.g. Acme Global Inc."
+                      className="w-full mt-1 p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white"
+                    />
+                  </div>
+                  {tool.id === 'pdf-receipt-voucher-generator' && (
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Amount ($ USD)</label>
+                      <input
+                        type="text"
+                        value={receiptAmount}
+                        onChange={(e) => setReceiptAmount(e.target.value)}
+                        placeholder="e.g. 450.00"
+                        className="w-full mt-1 p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white"
+                      />
+                    </div>
+                  )}
                 </div>
                 {tool.id === 'pdf-receipt-voucher-generator' && (
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Amount ($ USD)</label>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Received From (Client / Payer)</label>
                     <input
                       type="text"
-                      value={receiptAmount}
-                      onChange={(e) => setReceiptAmount(e.target.value)}
+                      value={receiptClient}
+                      onChange={(e) => setReceiptClient(e.target.value)}
+                      placeholder="e.g. Robert Vance"
                       className="w-full mt-1 p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white"
                     />
                   </div>
                 )}
+              </div>
+            )}
+
+            {tool.id === 'pdf-standard-nda-contract-maker' && (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Disclosing Party (Party A)</label>
+                  <input
+                    type="text"
+                    value={ndaPartyA}
+                    onChange={(e) => setNdaPartyA(e.target.value)}
+                    placeholder="e.g. TechCorp Global Inc."
+                    className="w-full mt-1 p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Receiving Party (Party B)</label>
+                  <input
+                    type="text"
+                    value={ndaPartyB}
+                    onChange={(e) => setNdaPartyB(e.target.value)}
+                    placeholder="e.g. Innovative Ventures LLC"
+                    className="w-full mt-1 p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white"
+                  />
+                </div>
+              </div>
+            )}
+
+            {(tool.id === 'pdf-signature-stamp-maker' || tool.id === 'pdf-sign-electronically') && (
+              <div>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Signatory Full Name</label>
+                <input
+                  type="text"
+                  value={signatureName}
+                  onChange={(e) => setSignatureName(e.target.value)}
+                  placeholder="e.g. Jane Doe, Esq."
+                  className="w-full mt-1 p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white"
+                />
+              </div>
+            )}
+
+            {tool.id === 'pdf-barcode-stamper-generator' && (
+              <div>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Barcode Identifier / SKU</label>
+                <input
+                  type="text"
+                  value={barcodeSku}
+                  onChange={(e) => setBarcodeSku(e.target.value)}
+                  placeholder="e.g. SKU-8921-X9"
+                  className="w-full mt-1 p-2 text-xs font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white"
+                />
               </div>
             )}
 
@@ -935,14 +1003,46 @@ export const HundredPdfToolsSuite: React.FC<HundredPdfToolsSuiteProps> = ({ tool
             )}
 
             {downloadUrl && (
-              <a
-                href={downloadUrl}
-                download={outputFileName}
-                className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
-              >
-                <Download className="w-4 h-4" />
-                Download {outputFileName}
-              </a>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <a
+                    href={downloadUrl}
+                    download={outputFileName}
+                    className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download {outputFileName}
+                  </a>
+                  <a
+                    href={downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-3 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all border border-slate-200 dark:border-slate-700"
+                    title="Open in new window"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Preview
+                  </a>
+                </div>
+
+                {!outputFileName.endsWith('.zip') && !outputFileName.endsWith('.txt') && (
+                  <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white">
+                    <div className="p-2 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3.5 h-3.5 text-indigo-500" /> Live Document Preview
+                      </span>
+                      <span className="text-[10px] text-slate-400">Client-rendered</span>
+                    </div>
+                    <div className="w-full h-72">
+                      <iframe
+                        src={downloadUrl}
+                        title="Generated PDF Preview"
+                        className="w-full h-full border-0"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {extractedOutput && (

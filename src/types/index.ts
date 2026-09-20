@@ -1,3 +1,5 @@
+import type { ToolFieldDefinition } from '../config/toolFieldRegistry';
+
 export type ToolCategory = 
   | 'pdf'
   | 'image'
@@ -31,6 +33,7 @@ export interface ToolItem {
   badge?: string;
   largeFileSupport?: boolean;
   howToUse: string[];
+  fields?: ToolFieldDefinition[];
   faqs: ToolFAQ[];
   relatedToolIds: string[];
   seoTitle: string;

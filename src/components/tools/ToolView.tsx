@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ToolItem } from '../../types';
+import { getDynamicHowToWork } from '../../config/toolFieldRegistry';
 import { IconRenderer } from '../common/IconRenderer';
 import { ToolDispatcher } from './ToolDispatcher';
 import { ToolCard } from './ToolCard';
@@ -549,7 +550,7 @@ export const ToolView: React.FC<ToolViewProps> = ({
             </h3>
           </div>
           <ol className="space-y-2.5">
-            {tool.howToUse.map((step, idx) => (
+            {getDynamicHowToWork(tool).map((step, idx) => (
               <li key={idx} className="flex items-start gap-3 text-xs text-slate-600 dark:text-slate-300">
                 <span className="w-5 h-5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center shrink-0 text-[10px]">
                   {idx + 1}

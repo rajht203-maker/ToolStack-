@@ -320,7 +320,7 @@ export const SecurityTools: React.FC<SecurityToolsProps> = ({ tool, onSuccess })
       )}
 
       {/* 3. RANDOM NUMBER GENERATOR */}
-      {tool.id === 'random-number' && (
+      {(tool.id === 'random-number' || tool.id === 'random-number-generator' || tool.slug === 'random-number-generator') && (
         <div className="space-y-5">
           <div className="grid grid-cols-3 gap-3">
             <div>

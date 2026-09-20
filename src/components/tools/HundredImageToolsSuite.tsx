@@ -701,7 +701,12 @@ export const HundredImageToolsSuite: React.FC<HundredImageToolsSuiteProps> = ({ 
             )}
 
             {/* Download Output Button */}
-            {downloadUrl && (
+            {!downloadUrl ? (
+              <label htmlFor="image-upload-control" className="w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer border border-slate-200 dark:border-slate-700">
+                <Upload className="w-4 h-4 text-amber-500" />
+                <span>Upload Image to Process & Preview</span>
+              </label>
+            ) : (
               <a
                 href={downloadUrl}
                 download={outputFileName}

@@ -11,10 +11,20 @@ export const ConverterTools: React.FC<ConverterToolsProps> = ({ tool, onSuccess 
   const [copied, setCopied] = useState(false);
 
   // Unit Converter states
-  const [unitCategory, setUnitCategory] = useState<'length' | 'weight' | 'data' | 'speed'>('length');
+  const initialCategory = useMemo(() => {
+    if (tool.id === 'weight-converter' || tool.slug === 'weight-converter') return 'weight';
+    if (tool.id === 'data-storage-converter' || tool.slug === 'data-storage-converter') return 'data';
+    return 'length';
+  }, [tool.id, tool.slug]);
+
+  const [unitCategory, setUnitCategory] = useState<'length' | 'weight' | 'data' | 'speed'>(initialCategory);
   const [unitValue, setUnitValue] = useState<number>(1);
-  const [unitFrom, setUnitFrom] = useState<string>('meter');
-  const [unitTo, setUnitTo] = useState<string>('feet');
+  const [unitFrom, setUnitFrom] = useState<string>(
+    initialCategory === 'weight' ? 'kilogram' : initialCategory === 'data' ? 'megabyte' : 'meter'
+  );
+  const [unitTo, setUnitTo] = useState<string>(
+    initialCategory === 'weight' ? 'pound' : initialCategory === 'data' ? 'gigabyte' : 'feet'
+  );
 
   // Temperature states
   const [tempCelsius, setTempCelsius] = useState<number>(25);
@@ -148,7 +158,13 @@ export const ConverterTools: React.FC<ConverterToolsProps> = ({ tool, onSuccess 
   return (
     <div className="space-y-6">
       {/* 1. UNIT CONVERTER */}
-      {tool.id === 'unit-converter' && (
+      {(tool.id === 'unit-converter' ||
+        tool.id === 'length-converter' ||
+        tool.id === 'weight-converter' ||
+        tool.id === 'data-storage-converter' ||
+        tool.slug === 'length-converter' ||
+        tool.slug === 'weight-converter' ||
+        tool.slug === 'data-storage-converter') && (
         <div className="space-y-5">
           <div className="flex gap-2">
             {(['length', 'weight', 'data', 'speed'] as const).map((cat) => (

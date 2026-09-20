@@ -1,7 +1,19 @@
 import React, { useState } from 'react';
 import { PDFDocument } from 'pdf-lib';
 import JSZip from 'jszip';
-import { Upload, FileText, Download, Check, RefreshCw, AlertCircle, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
+import { 
+  Upload, 
+  FileText, 
+  Download, 
+  Check, 
+  RefreshCw, 
+  AlertCircle, 
+  ArrowUp, 
+  ArrowDown, 
+  Trash2,
+  Eye,
+  ExternalLink
+} from 'lucide-react';
 import { ToolItem } from '../../types';
 
 interface PdfToolsProps {
@@ -511,6 +523,12 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ tool, onSuccess }) => {
           )}
         </button>
 
+        {files.length === 0 && (
+          <div className="text-center py-2 text-xs font-medium text-slate-400 dark:text-slate-500">
+            Upload your document or images above to configure and preview this tool.
+          </div>
+        )}
+
         {files.length > 0 && (
           <button
             onClick={handleReset}
@@ -521,31 +539,60 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ tool, onSuccess }) => {
         )}
       </div>
 
-      {/* Result Section */}
+      {/* Result & Live Preview Section */}
       {resultUrl && (
-        <div className="mt-6 p-6 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
-              <Download className="w-6 h-6" />
+        <div className="mt-6 space-y-4">
+          <div className="p-6 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Download className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="font-semibold text-emerald-950 dark:text-emerald-200 text-sm">
+                  Ready for Download & Preview!
+                </div>
+                <div className="text-xs text-emerald-700 dark:text-emerald-400">
+                  {resultName} {resultSize && `• ${resultSize}`}
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="font-semibold text-emerald-950 dark:text-emerald-200 text-sm">
-                Ready for Download!
-              </div>
-              <div className="text-xs text-emerald-700 dark:text-emerald-400">
-                {resultName} {resultSize && `• ${resultSize}`}
-              </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <a
+                href={resultUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 sm:flex-initial px-4 py-2.5 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 hover:bg-emerald-50 dark:hover:bg-slate-700 transition-all cursor-pointer shadow-xs"
+              >
+                <ExternalLink className="w-4 h-4" /> Preview in Full Tab
+              </a>
+              <a
+                href={resultUrl}
+                download={resultName}
+                className="flex-1 sm:flex-initial px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all"
+              >
+                <Download className="w-4 h-4" /> Download File
+              </a>
             </div>
           </div>
 
-          <a
-            href={resultUrl}
-            download={resultName}
-            className="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all"
-          >
-            <Download className="w-4 h-4" />
-            Download File
-          </a>
+          {!resultName.endsWith('.zip') && (
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span className="flex items-center gap-1.5 uppercase tracking-wider">
+                  <Eye className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Interactive Document Preview
+                </span>
+                <span className="text-[11px] text-slate-400">Rendered client-side</span>
+              </div>
+              <div className="w-full h-96 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white shadow-inner">
+                <iframe
+                  src={resultUrl}
+                  title="Generated Document Preview"
+                  className="w-full h-full border-0"
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

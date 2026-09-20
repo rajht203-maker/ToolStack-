@@ -66,6 +66,11 @@ export const CalculatorTools: React.FC<CalculatorToolsProps> = ({ tool, onSucces
   const [aspectH, setAspectH] = useState<number>(1080);
   const [newAspectW, setNewAspectW] = useState<number>(1280);
 
+  // Sales Tax states
+  const [salesTaxAmount, setSalesTaxAmount] = useState<number>(100);
+  const [salesTaxRate, setSalesTaxRate] = useState<number>(8.25);
+  const [salesTaxType, setSalesTaxType] = useState<'exclusive' | 'inclusive'>('exclusive');
+
   // --- 1. EMI CALCULATOR CALCULATION ---
   const emiData = useMemo(() => {
     const P = loanAmount;
@@ -277,6 +282,30 @@ export const CalculatorTools: React.FC<CalculatorToolsProps> = ({ tool, onSucces
       newH
     };
   }, [aspectW, aspectH, newAspectW]);
+
+  // --- 10. SALES TAX CALCULATOR ---
+  const salesTaxData = useMemo(() => {
+    const rateDecimal = salesTaxRate / 100;
+    if (salesTaxType === 'exclusive') {
+      const tax = salesTaxAmount * rateDecimal;
+      const total = salesTaxAmount + tax;
+      return {
+        original: salesTaxAmount.toFixed(2),
+        tax: tax.toFixed(2),
+        total: total.toFixed(2),
+        rate: salesTaxRate.toFixed(2)
+      };
+    } else {
+      const original = salesTaxAmount / (1 + rateDecimal);
+      const tax = salesTaxAmount - original;
+      return {
+        original: original.toFixed(2),
+        tax: tax.toFixed(2),
+        total: salesTaxAmount.toFixed(2),
+        rate: salesTaxRate.toFixed(2)
+      };
+    }
+  }, [salesTaxAmount, salesTaxRate, salesTaxType]);
 
   return (
     <div className="space-y-6">
@@ -913,7 +942,7 @@ export const CalculatorTools: React.FC<CalculatorToolsProps> = ({ tool, onSucces
       )}
 
       {/* 9. ASPECT RATIO CALCULATOR */}
-      {tool.id === 'aspect-ratio' && (
+      {(tool.id === 'aspect-ratio' || tool.id === 'aspect-ratio-calculator' || tool.slug === 'aspect-ratio-calculator') && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -962,6 +991,92 @@ export const CalculatorTools: React.FC<CalculatorToolsProps> = ({ tool, onSucces
               <strong className="text-emerald-600 dark:text-emerald-400 font-mono text-sm">
                 {aspectData.newH}px
               </strong>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 10. SALES TAX CALCULATOR */}
+      {(tool.id === 'sales-tax-calculator' || tool.slug === 'sales-tax-calculator') && (
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase mb-1">
+                Price / Order Amount ($)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={salesTaxAmount}
+                onChange={(e) => setSalesTaxAmount(Math.max(0, Number(e.target.value)))}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm font-semibold"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase mb-1">
+                Sales Tax Rate (%)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={salesTaxRate}
+                onChange={(e) => setSalesTaxRate(Math.max(0, Number(e.target.value)))}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm font-semibold"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSalesTaxType('exclusive')}
+              className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl border transition-all ${
+                salesTaxType === 'exclusive'
+                  ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300'
+                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+              }`}
+            >
+              Add Tax to Net Amount (Tax Exclusive)
+            </button>
+            <button
+              type="button"
+              onClick={() => setSalesTaxType('inclusive')}
+              className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl border transition-all ${
+                salesTaxType === 'inclusive'
+                  ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300'
+                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+              }`}
+            >
+              Extract Tax from Gross (Tax Inclusive)
+            </button>
+          </div>
+
+          <div className="p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+            <div className="text-center pb-2 border-b border-slate-200 dark:border-slate-700">
+              <span className="text-xs text-slate-500 uppercase font-semibold">
+                {salesTaxType === 'exclusive' ? 'Total Payable with Tax' : 'Total Gross Amount'}
+              </span>
+              <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                ${salesTaxData.total}
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1 text-slate-600 dark:text-slate-400">
+                <span>Net Item Price</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">
+                  ${salesTaxData.original}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 text-slate-600 dark:text-slate-400">
+                <span>Sales Tax ({salesTaxData.rate}%)</span>
+                <span className="font-semibold text-indigo-600 dark:text-indigo-400 font-mono">
+                  +${salesTaxData.tax}
+                </span>
+              </div>
             </div>
           </div>
         </div>

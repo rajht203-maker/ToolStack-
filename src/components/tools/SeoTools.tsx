@@ -51,6 +51,12 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ tool, onSuccess }) => {
   // Hashtag Generator states
   const [hashtagTopic, setHashtagTopic] = useState<string>('web development');
 
+  // Bio Generator states
+  const [bioName, setBioName] = useState<string>('Alex Morgan');
+  const [bioRole, setBioRole] = useState<string>('Full-Stack Engineer & Open Source Creator');
+  const [bioNiche, setBioNiche] = useState<string>('Building developer tools and cloud infrastructure');
+  const [bioStyle, setBioStyle] = useState<'professional' | 'minimal' | 'creative' | 'casual'>('professional');
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -152,6 +158,32 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ tool, onSuccess }) => {
     ];
   }, [hashtagTopic]);
 
+  // --- 6. SOCIAL BIO GENERATOR ---
+  const generatedBios = useMemo(() => {
+    const name = bioName.trim() || 'Alex Morgan';
+    const role = bioRole.trim() || 'Creator & Innovator';
+    const niche = bioNiche.trim() || 'Sharing insights on tech & design';
+
+    return [
+      {
+        style: 'Professional & Clear',
+        text: `${name} | ${role}. Helping teams scale through modern workflows. Focus: ${niche}. Let's build together.`
+      },
+      {
+        style: 'Short & Punchy (Twitter/X & LinkedIn)',
+        text: `🚀 ${role} • Passionate about ${niche} • Building for tomorrow • Connect with ${name} 👇`
+      },
+      {
+        style: 'Minimalist & Clean',
+        text: `${name} — ${role}. Obsessed with ${niche}. Always learning.`
+      },
+      {
+        style: 'Creator / Founder',
+        text: `Crafting high-impact solutions as a ${role}. 🛠️ ${niche}. Welcome to my journey!`
+      }
+    ];
+  }, [bioName, bioRole, bioNiche]);
+
   const downloadTextFile = (filename: string, content: string) => {
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -251,8 +283,10 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ tool, onSuccess }) => {
         </div>
       )}
 
-      {/* 2. META TAG GENERATOR */}
-      {tool.id === 'meta-tag-generator' && (
+      {/* 2. META TAG GENERATOR & OPEN GRAPH PREVIEW */}
+      {(tool.id === 'meta-tag-generator' ||
+        tool.id === 'open-graph-preview' ||
+        tool.slug === 'open-graph-preview') && (
         <div className="space-y-4">
           <div>
             <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase mb-1">
@@ -330,7 +364,9 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ tool, onSuccess }) => {
       )}
 
       {/* 3. ROBOTS.TXT GENERATOR */}
-      {tool.id === 'robots-generator' && (
+      {(tool.id === 'robots-generator' ||
+        tool.id === 'robots-txt-generator' ||
+        tool.slug === 'robots-txt-generator') && (
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase mb-1">
@@ -539,6 +575,84 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ tool, onSuccess }) => {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. SOCIAL BIO GENERATOR */}
+      {(tool.id === 'bio-generator' || tool.slug === 'bio-generator') && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase mb-1">
+                Your Name / Brand
+              </label>
+              <input
+                type="text"
+                value={bioName}
+                onChange={(e) => setBioName(e.target.value)}
+                placeholder="Alex Morgan"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase mb-1">
+                Role / Title
+              </label>
+              <input
+                type="text"
+                value={bioRole}
+                onChange={(e) => setBioRole(e.target.value)}
+                placeholder="Full-Stack Engineer & Creator"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase mb-1">
+              Focus, Niche, or Core Value Proposition
+            </label>
+            <input
+              type="text"
+              value={bioNiche}
+              onChange={(e) => setBioNiche(e.target.value)}
+              placeholder="Building developer tools and cloud solutions"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm"
+            />
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+              Generated Bio Templates:
+            </span>
+
+            {generatedBios.map((bio, idx) => (
+              <div
+                key={idx}
+                className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">{bio.style}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      copyToClipboard(bio.text);
+                      onSuccess(`Copied ${bio.style} bio.`);
+                    }}
+                    className="text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1 font-semibold"
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Copy
+                  </button>
+                </div>
+                <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed select-all">
+                  {bio.text}
+                </p>
+                <div className="text-[11px] text-slate-400 text-right">
+                  {bio.text.length} characters
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
