@@ -5,7 +5,9 @@ import {
   signInWithPopup, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signOut as firebaseSignOut 
+  signOut as firebaseSignOut,
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { 
   doc, 
@@ -17,6 +19,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { auth, db, googleProvider, handleFirestoreError, OperationType } from '../lib/firebase';
+import { getFriendlyAuthErrorMessage } from '../utils/authErrors';
 import { UserProfile, UserFavorite, ToolHistoryItem, SavedPreset, SiteSettings, AdminAuditLog } from '../types';
 
 interface AuthContextType {
@@ -39,6 +42,8 @@ interface AuthContextType {
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signupWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   signOutUser: () => Promise<void>;
   toggleFavorite: (toolId: string, toolName?: string) => Promise<void>;
@@ -84,59 +89,89 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearError = () => setError(null);
 
-  // Sync auth state
+  // Sync auth state across sessions and page refreshes
   useEffect(() => {
+    let isMounted = true;
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
       setCurrentUser(user);
+
       if (user) {
         // Load or create profile in Firestore
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const snap = await getDoc(userDocRef);
           
-          const isBootstrapAdmin = user.email === 'rajht203@gmail.com';
+          const cleanEmail = (user.email || '').trim().toLowerCase();
+          const isBootstrapAdmin = cleanEmail === 'rajht203@gmail.com';
           const defaultRole: 'user' | 'admin' = isBootstrapAdmin ? 'admin' : 'user';
 
           if (!snap.exists()) {
             const newProfile: UserProfile = {
               userId: user.uid,
-              email: user.email || '',
-              displayName: user.displayName || user.email?.split('@')[0] || 'User',
+              email: cleanEmail,
+              displayName: user.displayName || cleanEmail.split('@')[0] || 'User',
               photoURL: user.photoURL || undefined,
               role: defaultRole,
+              status: 'active',
               createdAt: new Date().toISOString()
             };
-            await setDoc(userDocRef, newProfile);
-            setUserProfile(newProfile);
+            try {
+              await setDoc(userDocRef, newProfile);
+            } catch (writeErr) {
+              console.warn('Could not write initial profile to Firestore:', writeErr);
+            }
+            if (isMounted) setUserProfile(newProfile);
           } else {
             const data = snap.data() as UserProfile;
             if (isBootstrapAdmin && data.role !== 'admin') {
               data.role = 'admin';
-              await setDoc(userDocRef, data, { merge: true });
+              try {
+                await setDoc(userDocRef, { role: 'admin' }, { merge: true });
+              } catch (e) {
+                console.warn('Could not upgrade admin role in Firestore:', e);
+              }
             }
-            setUserProfile(data);
+            if (isMounted) setUserProfile(data);
           }
 
-          // Fetch favorites
-          await loadUserSubcollections(user.uid);
+          // Fetch user subcollections
+          if (isMounted) {
+            await loadUserSubcollections(user.uid);
+          }
         } catch (err) {
-          console.warn('Profile load error (using fallback local profile):', err);
-          setUserProfile({
-            userId: user.uid,
-            email: user.email || '',
-            displayName: user.displayName || 'User',
-            role: user.email === 'rajht203@gmail.com' ? 'admin' : 'user'
-          });
+          console.warn('Profile sync warning (retaining local state):', err);
+          if (isMounted) {
+            const cleanEmail = (user.email || '').trim().toLowerCase();
+            setUserProfile({
+              userId: user.uid,
+              email: cleanEmail,
+              displayName: user.displayName || cleanEmail.split('@')[0] || 'User',
+              photoURL: user.photoURL || undefined,
+              role: cleanEmail === 'rajht203@gmail.com' ? 'admin' : 'user',
+              status: 'active',
+              createdAt: new Date().toISOString()
+            });
+            loadLocalData();
+          }
         }
       } else {
-        setUserProfile(null);
-        // Load local favorites from localStorage
-        loadLocalData();
+        if (isMounted) {
+          setUserProfile(null);
+          loadLocalData();
+        }
       }
-      setLoading(false);
+
+      if (isMounted) {
+        setLoading(false);
+      }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   // Fetch site settings
@@ -196,55 +231,112 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async () => {
     setError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
+      googleProvider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      const cred = await signInWithPopup(auth, googleProvider);
+      if (cred.user) {
+        setCurrentUser(cred.user);
+      }
     } catch (err: any) {
       console.error('Google login error:', err);
-      const msg = err?.message || 'Google sign-in failed';
+      const msg = getFriendlyAuthErrorMessage(err);
       setError(msg);
-      throw err;
+      throw new Error(msg);
     }
   };
 
   const signInWithEmail = async (email: string, pass: string) => {
     setError(null);
+    const cleanEmail = email.trim().toLowerCase();
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
+      const cred = await signInWithEmailAndPassword(auth, cleanEmail, pass);
+      if (cred.user) {
+        setCurrentUser(cred.user);
+      }
     } catch (err: any) {
-      const msg = err?.message || 'Failed to sign in';
+      console.error('Email signin error:', err);
+      const msg = getFriendlyAuthErrorMessage(err);
       setError(msg);
-      throw err;
+      throw new Error(msg);
     }
   };
 
   const signUpWithEmail = async (email: string, pass: string, name: string) => {
     setError(null);
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      const cred = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
       if (cred.user) {
-        const isBootstrap = cred.user.email === 'rajht203@gmail.com';
+        // Set display name in Firebase Auth user record
+        try {
+          await updateProfile(cred.user, { displayName: cleanName });
+        } catch (profileErr) {
+          console.warn('Failed to update Auth user displayName:', profileErr);
+        }
+
+        const isBootstrap = cleanEmail === 'rajht203@gmail.com';
         const newProfile: UserProfile = {
           userId: cred.user.uid,
-          email: cred.user.email || '',
-          displayName: name || email.split('@')[0],
+          email: cleanEmail,
+          displayName: cleanName || cleanEmail.split('@')[0] || 'User',
+          photoURL: cred.user.photoURL || undefined,
           role: isBootstrap ? 'admin' : 'user',
+          status: 'active',
           createdAt: new Date().toISOString()
         };
-        await setDoc(doc(db, 'users', cred.user.uid), newProfile);
+
+        try {
+          await setDoc(doc(db, 'users', cred.user.uid), newProfile);
+        } catch (dbErr) {
+          console.warn('Could not save profile in Firestore immediately:', dbErr);
+        }
+
         setUserProfile(newProfile);
+        setCurrentUser(cred.user);
       }
     } catch (err: any) {
-      const msg = err?.message || 'Failed to sign up';
+      console.error('Email signup error:', err);
+      const msg = getFriendlyAuthErrorMessage(err);
       setError(msg);
-      throw err;
+      throw new Error(msg);
+    }
+  };
+
+  const sendPasswordReset = async (email: string) => {
+    setError(null);
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      const msg = 'Please provide a valid email address.';
+      setError(msg);
+      throw new Error(msg);
+    }
+    try {
+      await sendPasswordResetEmail(auth, cleanEmail);
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      const msg = getFriendlyAuthErrorMessage(err);
+      setError(msg);
+      throw new Error(msg);
     }
   };
 
   const signOutUser = async () => {
     setError(null);
-    await firebaseSignOut(auth);
-    setFavorites([]);
-    setHistory([]);
-    setPresets([]);
+    try {
+      await firebaseSignOut(auth);
+      setCurrentUser(null);
+      setUserProfile(null);
+      setFavorites([]);
+      setHistory([]);
+      setPresets([]);
+      loadLocalData();
+    } catch (err: any) {
+      const msg = getFriendlyAuthErrorMessage(err);
+      setError(msg);
+      throw new Error(msg);
+    }
   };
 
   const isFavorite = (toolId: string) => {
@@ -405,6 +497,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: new Date().toISOString() 
     } as UserProfile;
     setUserProfile(updated);
+
+    if (data.displayName && data.displayName.trim()) {
+      try {
+        await updateProfile(currentUser, { displayName: data.displayName.trim() });
+      } catch (authErr) {
+        console.warn('Auth user displayName update warning:', authErr);
+      }
+    }
+
     try {
       await setDoc(doc(db, 'users', currentUser.uid), updated, { merge: true });
     } catch (e) {
@@ -584,6 +685,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signInWithEmail,
       signupWithEmail: signUpWithEmail,
       signUpWithEmail,
+      sendPasswordReset,
+      resetPassword: sendPasswordReset,
       logout: signOutUser,
       signOutUser,
       toggleFavorite,

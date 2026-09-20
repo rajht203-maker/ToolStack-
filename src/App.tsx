@@ -13,6 +13,7 @@ import { KeyboardCheatSheetModal } from './components/common/KeyboardCheatSheetM
 import { CustomThemeModal } from './components/common/CustomThemeModal';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { AdminPanel } from './components/admin/AdminPanel';
+import { UserProfileModal } from './components/user/UserProfileModal';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { getToolBySlug, TOOLS_DATA } from './data/toolsData';
 import { ToolItem } from './types';
@@ -27,6 +28,7 @@ function AppContent() {
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
   const [favoritesDrawerOpen, setFavoritesDrawerOpen] = useState<boolean>(false);
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+  const [userProfileModalOpen, setUserProfileModalOpen] = useState<boolean>(false);
   const [cheatSheetOpen, setCheatSheetOpen] = useState<boolean>(false);
   const [adminPanelOpen, setAdminPanelOpen] = useState<boolean>(false);
   const [showBanner, setShowBanner] = useState<boolean>(true);
@@ -328,6 +330,7 @@ function AppContent() {
           onOpenFavorites={() => setFavoritesDrawerOpen(true)}
           onOpenAuth={() => setAuthModalOpen(true)}
           onOpenAdmin={() => setAdminPanelOpen(true)}
+          onOpenProfile={() => setUserProfileModalOpen(true)}
           onOpenHelp={() => setCheatSheetOpen(true)}
           onSelectCategory={handleSelectCategory}
           onGoHome={handleGoHome}
@@ -445,6 +448,13 @@ function AppContent() {
         <AuthModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
+        />
+
+        <UserProfileModal
+          isOpen={userProfileModalOpen}
+          onClose={() => setUserProfileModalOpen(false)}
+          onSelectTool={handleSelectTool}
+          onOpenAdmin={() => setAdminPanelOpen(true)}
         />
 
         <KeyboardCheatSheetModal

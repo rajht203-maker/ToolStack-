@@ -1,12 +1,18 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
   getAuth, 
   GoogleAuthProvider, 
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  inMemoryPersistence,
   signInWithPopup, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
+  updateProfile,
+  sendPasswordResetEmail,
   User
 } from 'firebase/auth';
 import { 
@@ -26,15 +32,34 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
+export { getFriendlyAuthErrorMessage } from '../utils/authErrors';
 
-// Initialize Firebase App
-const app = initializeApp(firebaseConfig);
+// Initialize or reuse Firebase App instance
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize Firestore as mandated by Firebase Integration Skill:
 // export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Initialize Authentication with explicit persistence for page refreshes
 export const auth = getAuth(app);
+
+// Enforce browserLocalPersistence so authentication state persists across refreshes and restarts
+if (typeof window !== 'undefined') {
+  setPersistence(auth, browserLocalPersistence).catch((err) => {
+    console.warn('browserLocalPersistence not available, trying session persistence:', err);
+    setPersistence(auth, browserSessionPersistence).catch((sessionErr) => {
+      console.warn('sessionPersistence failed, falling back to inMemory:', sessionErr);
+      setPersistence(auth, inMemoryPersistence).catch(() => {});
+    });
+  });
+}
+
+// Google Auth Provider configured with account prompt
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 export enum OperationType {
   CREATE = 'create',

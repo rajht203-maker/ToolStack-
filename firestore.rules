@@ -45,10 +45,10 @@ service cloud.firestore {
       allow create: if (isOwner(userId) &&
         request.resource.data.userId == userId &&
         request.resource.data.email is string &&
-        (request.resource.data.role == 'user' || (request.resource.data.role == 'admin' && request.auth.token.email == 'rajht203@gmail.com'))) || isAdmin();
+        (!('role' in request.resource.data) || request.resource.data.role == 'user' || (request.resource.data.role == 'admin' && request.auth.token.email == 'rajht203@gmail.com'))) || isAdmin();
       allow update: if (isOwner(userId) &&
         request.resource.data.userId == userId &&
-        (request.resource.data.role == resource.data.role || isAdmin())) || isAdmin();
+        (!('role' in request.resource.data) || request.resource.data.role == resource.data.role || isAdmin())) || isAdmin();
       allow delete: if isAdmin();
 
       // Subcollection: Favorites
