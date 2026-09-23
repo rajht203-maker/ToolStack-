@@ -28,7 +28,7 @@ export function getSiteOrigin(): string {
     }
     return window.location.origin.replace(/\/+$/, '');
   }
-  return 'https://toolstack.dev';
+  return 'https://toolstack-eosin.vercel.app';
 }
 
 /**
