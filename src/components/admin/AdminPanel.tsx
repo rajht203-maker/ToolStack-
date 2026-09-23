@@ -32,19 +32,21 @@ import {
   Star,
   MessageSquare,
   Bug,
-  Lightbulb
+  Lightbulb,
+  Globe
 } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { getAllFeedback, updateFeedbackStatus, deleteFeedbackItem } from '../../services/feedbackService';
 import { ToolFeedback, FeedbackType } from '../../types';
+import { SEOAuditDashboard } from './SEOAuditDashboard';
 
 interface AdminPanelProps {
   onClose: () => void;
   onSelectTool: (tool: ToolItem) => void;
 }
 
-type AdminTab = 'overview' | 'users' | 'tools' | 'feedback' | 'settings' | 'logs';
+type AdminTab = 'overview' | 'users' | 'tools' | 'feedback' | 'seo' | 'settings' | 'logs';
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool }) => {
   const { 
@@ -468,6 +470,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
                 {feedbackList.length}
               </span>
             )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('seo')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+              activeTab === 'seo'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" />
+            SEO & Indexing Audit
           </button>
 
           <button
@@ -1346,6 +1360,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
             </div>
           )}
         </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. SEO & INDEXING AUDIT TAB */}
+      {/* ========================================================================= */}
+      {activeTab === 'seo' && (
+        <SEOAuditDashboard onSelectTool={onSelectTool} />
       )}
 
       {/* ========================================================================= */}

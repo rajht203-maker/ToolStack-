@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ToolItem } from '../../types';
 import { getDynamicHowToWork } from '../../config/toolFieldRegistry';
 import { IconRenderer } from '../common/IconRenderer';
@@ -8,6 +8,8 @@ import { ToolFeedbackComponent } from './ToolFeedbackComponent';
 import { getRelatedTools, CATEGORIES } from '../../data/toolsData';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { SEOHead } from '../seo/SEOHead';
+import { getToolSEOConfig } from '../../utils/seoConfig';
 import { 
   ChevronRight, 
   Heart, 
@@ -28,7 +30,11 @@ import {
   MessageCircle,
   X,
   Home,
-  Palette
+  Palette,
+  Cpu,
+  FileCheck,
+  Layers,
+  Info
 } from 'lucide-react';
 
 interface ToolViewProps {
@@ -56,6 +62,9 @@ export const ToolView: React.FC<ToolViewProps> = ({
 
   const relatedTools = getRelatedTools(tool);
   const categoryInfo = CATEGORIES.find(c => c.id === tool.category);
+
+  // Dynamic SEO configuration for this tool
+  const seoConfig = useMemo(() => getToolSEOConfig(tool), [tool]);
 
   // Derive canonical direct permalink for this tool
   const getPermalink = (toolItem: ToolItem): string => {
@@ -204,7 +213,10 @@ export const ToolView: React.FC<ToolViewProps> = ({
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+    <article className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+      {/* Dynamic SEO & Social Head Metadata Injection */}
+      <SEOHead config={seoConfig} />
+
       {/* Toast Notification */}
       {successToast && (
         <div className="fixed bottom-5 right-5 z-50 p-4 bg-emerald-600 text-white rounded-2xl shadow-xl flex items-center gap-3 text-xs font-semibold animate-in slide-in-from-bottom-2">
@@ -584,6 +596,67 @@ export const ToolView: React.FC<ToolViewProps> = ({
         </div>
       </div>
 
+      {/* Tool Technical Specifications & Overview for Search Engines & Users */}
+      <section 
+        aria-labelledby="tool-specifications-heading"
+        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 sm:p-7 space-y-5 shadow-xs"
+      >
+        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+          <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          <h2 id="tool-specifications-heading" className="text-base font-black tracking-tight text-slate-900 dark:text-white">
+            Technical Specifications & Privacy Guarantees
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-1.5 border border-slate-100 dark:border-slate-800/80">
+            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              Processing Architecture
+            </div>
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-[11px]">
+              100% In-Browser Execution. Uses native WebAssembly, Web Workers &amp; Canvas. Zero data leaves your machine.
+            </p>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-1.5 border border-slate-100 dark:border-slate-800/80">
+            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <FileCheck className="w-3.5 h-3.5 text-indigo-500" />
+              Supported Specifications
+            </div>
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-[11px]">
+              {tool.category === 'pdf' 
+                ? 'Standard PDF 1.3 - 2.0, PDF/A, large documents up to 250MB+.' 
+                : tool.category === 'image' 
+                ? 'PNG, JPG/JPEG, WebP, SVG, GIF, high-DPI rasterization.' 
+                : tool.category === 'calculator' || tool.category === 'converter'
+                ? 'IEEE 754 precision math, international standard units.'
+                : 'UTF-8, JSON, CSPRNG cryptography & standard web formats.'}
+            </p>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-1.5 border border-slate-100 dark:border-slate-800/80">
+            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-violet-500" />
+              Compatibility
+            </div>
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-[11px]">
+              Works instantly on Chrome, Safari, Firefox, Edge, Android &amp; iOS. No native app or software installation needed.
+            </p>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-1.5 border border-slate-100 dark:border-slate-800/80">
+            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              Zero Watermarks
+            </div>
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-[11px]">
+              Completely free forever for personal &amp; commercial use. No hidden watermarks, credit cards, or trial limits.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Tool Feedback, Rating & Bug Reporting (Stored in Firestore) */}
       <ToolFeedbackComponent tool={tool} onOpenAuth={onOpenAuth} />
 
@@ -600,6 +673,6 @@ export const ToolView: React.FC<ToolViewProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 };

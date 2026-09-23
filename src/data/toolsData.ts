@@ -3694,7 +3694,12 @@ export function getToolsByCategory(catId: string): ToolItem[] {
 }
 
 export function getRelatedTools(tool: ToolItem): ToolItem[] {
-  return TOOLS_DATA.filter(t => tool.relatedToolIds.includes(t.id));
+  const directMatches = TOOLS_DATA.filter(t => t.id !== tool.id && tool.relatedToolIds && tool.relatedToolIds.includes(t.id));
+  if (directMatches.length >= 3) {
+    return directMatches.slice(0, 6);
+  }
+  const fallbackMatches = TOOLS_DATA.filter(t => t.id !== tool.id && t.category === tool.category && (!tool.relatedToolIds || !tool.relatedToolIds.includes(t.id)));
+  return [...directMatches, ...fallbackMatches].slice(0, 6);
 }
 
 export const PLATFORM_STATS = {

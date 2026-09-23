@@ -1515,6 +1515,13 @@ export function getToolSchema(toolIdOrSlug: string, fallbackName?: string): Tool
 }
 
 /**
+ * Get field schema configuration for a tool by its ID or slug.
+ */
+export function getToolFieldConfig(toolIdOrSlug: string): ToolFieldSchema | undefined {
+  return TOOL_FIELD_REGISTRY[toolIdOrSlug];
+}
+
+/**
  * DYNAMIC "HOW TO WORK" GENERATOR
  * 
  * Strict Rule 4:

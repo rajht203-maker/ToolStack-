@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { Navbar } from './components/layout/Navbar';
@@ -6,6 +6,8 @@ import { Sidebar } from './components/layout/Sidebar';
 import { Footer } from './components/layout/Footer';
 import { HomePage } from './components/home/HomePage';
 import { ToolView } from './components/tools/ToolView';
+import { NotFoundPage } from './components/common/NotFoundPage';
+import { SEOHead } from './components/seo/SEOHead';
 import { SearchModal } from './components/common/SearchModal';
 import { FavoritesDrawer } from './components/common/FavoritesDrawer';
 import { AuthModal } from './components/common/AuthModal';
@@ -15,7 +17,8 @@ import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { UserProfileModal } from './components/user/UserProfileModal';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
-import { getToolBySlug, TOOLS_DATA } from './data/toolsData';
+import { getToolBySlug, TOOLS_DATA, CATEGORIES } from './data/toolsData';
+import { getHomeSEOConfig, getCategorySEOConfig, getAdminSEOConfig } from './utils/seoConfig';
 import { ToolItem } from './types';
 import { recordToolClick } from './utils/toolAnalytics';
 import { Sparkles, Shield, X } from 'lucide-react';
@@ -23,6 +26,7 @@ import { Sparkles, Shield, X } from 'lucide-react';
 function AppContent() {
   const { isThemeModalOpen, closeThemeModal, openThemeModal } = useTheme();
   const [activeTool, setActiveTool] = useState<ToolItem | null>(null);
+  const [notFoundSlug, setNotFoundSlug] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [memberOnlyFilter, setMemberOnlyFilter] = useState<boolean>(false);
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
@@ -118,6 +122,27 @@ function AppContent() {
       const found = getToolBySlug(toolSlug);
       if (found) {
         setActiveTool(found);
+        setNotFoundSlug(null);
+        setSelectedCategory(null);
+        setAdminPanelOpen(false);
+        return;
+      } else {
+        setNotFoundSlug(toolSlug);
+        setActiveTool(null);
+        setSelectedCategory(null);
+        setAdminPanelOpen(false);
+        return;
+      }
+    }
+
+    // Check category route: /category/[catId]
+    const catMatch = pathname.match(/\/category\/([^/?#]+)/) || (pParam && pParam.match(/category\/([^/?#]+)/));
+    if (catMatch && catMatch[1]) {
+      const catId = catMatch[1];
+      if (CATEGORIES.some(c => c.id === catId)) {
+        setSelectedCategory(catId);
+        setActiveTool(null);
+        setNotFoundSlug(null);
         setAdminPanelOpen(false);
         return;
       }
@@ -129,11 +154,13 @@ function AppContent() {
     if (isAdminRoute) {
       setAdminPanelOpen(true);
       setActiveTool(null);
+      setNotFoundSlug(null);
       return;
     }
 
     // Default: home
     setActiveTool(null);
+    setNotFoundSlug(null);
     setAdminPanelOpen(false);
   }, []);
 
@@ -149,6 +176,20 @@ function AppContent() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [resolveRoute]);
 
+  // Derive SEO metadata for the current view when not in an active tool (ToolView provides its own)
+  const activeSEOConfig = useMemo(() => {
+    if (adminPanelOpen) {
+      return getAdminSEOConfig();
+    }
+    if (selectedCategory) {
+      const cat = CATEGORIES.find(c => c.id === selectedCategory);
+      if (cat) {
+        return getCategorySEOConfig(cat);
+      }
+    }
+    return getHomeSEOConfig();
+  }, [adminPanelOpen, selectedCategory]);
+
   // Sync activeTool with URL & Document Title & SEO meta tags
   useEffect(() => {
     const basePath = getBasePath();
@@ -162,44 +203,40 @@ function AppContent() {
       if (window.location.pathname !== newPath) {
         window.history.pushState({ toolId: activeTool.id }, '', newPath);
       }
-      document.title = `${activeTool.seoTitle || activeTool.name} | ToolStack`;
-
-      // Update meta description
-      const metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc && activeTool.seoDescription) {
-        metaDesc.setAttribute('content', activeTool.seoDescription);
-      }
     } else if (adminPanelOpen) {
       const newPath = `${basePath}/admin`;
       if (window.location.pathname !== newPath) {
         window.history.pushState({}, '', newPath);
       }
-      document.title = 'Admin Control Center | ToolStack';
-    } else {
+    } else if (selectedCategory) {
+      const newPath = `${basePath}/category/${selectedCategory}`;
+      if (window.location.pathname !== newPath) {
+        window.history.pushState({}, '', newPath);
+      }
+    } else if (!notFoundSlug) {
       const homePath = basePath ? `${basePath}/` : '/';
       const isSubRoute = window.location.pathname.includes('/tools/') || 
                          window.location.pathname.includes('/calculators/') || 
+                         window.location.pathname.includes('/category/') ||
                          window.location.pathname.includes('/admin');
       if (isSubRoute) {
         window.history.pushState({}, '', homePath);
       }
-      document.title = 'ToolStack - All-in-One Free Online Tools';
     }
 
     // Scroll to top upon page navigation
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeTool, adminPanelOpen, getBasePath]);
+  }, [activeTool, adminPanelOpen, selectedCategory, notFoundSlug, getBasePath]);
 
   const handleGoHome = useCallback(() => {
     setActiveTool(null);
     setSelectedCategory(null);
+    setNotFoundSlug(null);
     setMemberOnlyFilter(false);
     setAdminPanelOpen(false);
     const basePath = getBasePath();
     const homePath = basePath ? `${basePath}/` : '/';
-    if (window.location.pathname.includes('/tools/') || 
-        window.location.pathname.includes('/calculators/') || 
-        window.location.pathname.includes('/admin')) {
+    if (window.location.pathname !== homePath) {
       window.history.pushState({}, '', homePath);
     }
   }, [getBasePath]);
@@ -287,24 +324,27 @@ function AppContent() {
   const handleSelectTool = (tool: ToolItem) => {
     recordToolClick(tool.id);
     setActiveTool(tool);
+    setNotFoundSlug(null);
     setAdminPanelOpen(false);
   };
 
   const handleSelectCategory = (catId: string | null) => {
     setSelectedCategory(catId);
     setActiveTool(null);
+    setNotFoundSlug(null);
     setAdminPanelOpen(false);
     const basePath = getBasePath();
-    const homePath = basePath ? `${basePath}/` : '/';
-    if (window.location.pathname.includes('/tools/') || 
-        window.location.pathname.includes('/calculators/') || 
-        window.location.pathname.includes('/admin')) {
-      window.history.pushState({}, '', homePath);
+    const newPath = catId ? `${basePath}/category/${catId}` : (basePath ? `${basePath}/` : '/');
+    if (window.location.pathname !== newPath) {
+      window.history.pushState({}, '', newPath);
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-slate-950 text-[#0F172A] dark:text-slate-100 font-sans transition-colors">
+        {/* Dynamic SEO & Structured Data Head (for Home, Category & Admin views) */}
+        {!activeTool && !notFoundSlug && <SEOHead config={activeSEOConfig} />}
+
         {/* Top Announcement Banner */}
         {showBanner && (
           <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white text-xs py-2 px-4 flex items-center justify-between shadow-xs">
@@ -367,7 +407,15 @@ function AppContent() {
           <div className="flex-1 min-w-0 flex flex-col pb-16 md:pb-0">
             {/* Main Content Area */}
             <main className="flex-1 overflow-x-hidden">
-              {adminPanelOpen ? (
+              {notFoundSlug ? (
+                <div key="not-found" className="w-full animate-in fade-in duration-200">
+                  <NotFoundPage
+                    requestedSlug={notFoundSlug}
+                    onGoHome={handleGoHome}
+                    onSelectTool={handleSelectTool}
+                  />
+                </div>
+              ) : adminPanelOpen ? (
                 <div
                   key="admin-panel"
                   className="w-full animate-admin-fade-in"
