@@ -346,6 +346,44 @@ export function getAdminSEOConfig(customOrigin?: string): PageSEOConfig {
 }
 
 /**
+ * Generate SEO configuration for Privacy Policy Page (Indexable)
+ */
+export function getPrivacyPolicySEOConfig(customOrigin?: string): PageSEOConfig {
+  const origin = customOrigin || getSiteOrigin();
+  const basePath = getBasePath();
+  const canonicalUrl = `${origin}${basePath}/privacy-policy`;
+
+  return {
+    name: 'Privacy Policy',
+    slug: 'privacy-policy',
+    description: 'Official Privacy Policy for ToolStack. Explains client-side privacy architecture, cookies, Google AdSense disclosures, and data rights.',
+    category: 'legal',
+    keywords: [
+      'toolstack privacy policy',
+      'privacy policy online tools',
+      'client-side data protection',
+      'google adsense policy disclosure',
+      'cookies policy'
+    ],
+    canonicalUrl,
+    indexable: true,
+    h1: 'Privacy Policy',
+    seoTitle: 'Privacy Policy – Data Protection & AdSense Compliance | ToolStack',
+    seoDescription: 'Review the official ToolStack Privacy Policy. Learn about our 100% client-side privacy architecture, cookie policies, Google AdSense advertising disclosures, and user rights.',
+    relatedTools: [],
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: 'ToolStack Privacy Policy',
+        url: canonicalUrl,
+        description: 'Privacy Policy explaining data protection, client-side processing, cookies, and advertising disclosures for ToolStack.'
+      }
+    ]
+  };
+}
+
+/**
  * Helper to map tool category to Schema.org application category
  */
 function getApplicationCategory(category: string): string {

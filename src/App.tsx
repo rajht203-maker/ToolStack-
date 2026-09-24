@@ -16,9 +16,10 @@ import { CustomThemeModal } from './components/common/CustomThemeModal';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { UserProfileModal } from './components/user/UserProfileModal';
+import { PrivacyPolicyPage } from './components/legal/PrivacyPolicyPage';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { getToolBySlug, TOOLS_DATA, CATEGORIES } from './data/toolsData';
-import { getHomeSEOConfig, getCategorySEOConfig, getAdminSEOConfig } from './utils/seoConfig';
+import { getHomeSEOConfig, getCategorySEOConfig, getAdminSEOConfig, getPrivacyPolicySEOConfig } from './utils/seoConfig';
 import { ToolItem } from './types';
 import { recordToolClick } from './utils/toolAnalytics';
 import { Sparkles, Shield, X } from 'lucide-react';
@@ -35,6 +36,7 @@ function AppContent() {
   const [userProfileModalOpen, setUserProfileModalOpen] = useState<boolean>(false);
   const [cheatSheetOpen, setCheatSheetOpen] = useState<boolean>(false);
   const [adminPanelOpen, setAdminPanelOpen] = useState<boolean>(false);
+  const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState<boolean>(false);
   const [showBanner, setShowBanner] = useState<boolean>(true);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -155,6 +157,20 @@ function AppContent() {
       setAdminPanelOpen(true);
       setActiveTool(null);
       setNotFoundSlug(null);
+      setPrivacyPolicyOpen(false);
+      return;
+    }
+
+    const isPrivacyPolicy = pathname.includes('/privacy-policy') || 
+                            searchParams.get('page') === 'privacy-policy' || 
+                            hash === 'privacy-policy' ||
+                            (pParam && pParam.includes('privacy-policy'));
+    if (isPrivacyPolicy) {
+      setPrivacyPolicyOpen(true);
+      setActiveTool(null);
+      setNotFoundSlug(null);
+      setSelectedCategory(null);
+      setAdminPanelOpen(false);
       return;
     }
 
@@ -162,6 +178,7 @@ function AppContent() {
     setActiveTool(null);
     setNotFoundSlug(null);
     setAdminPanelOpen(false);
+    setPrivacyPolicyOpen(false);
   }, []);
 
   // Initialize route on mount and listen to browser popstate
@@ -178,6 +195,9 @@ function AppContent() {
 
   // Derive SEO metadata for the current view when not in an active tool (ToolView provides its own)
   const activeSEOConfig = useMemo(() => {
+    if (privacyPolicyOpen) {
+      return getPrivacyPolicySEOConfig();
+    }
     if (adminPanelOpen) {
       return getAdminSEOConfig();
     }
@@ -188,7 +208,7 @@ function AppContent() {
       }
     }
     return getHomeSEOConfig();
-  }, [adminPanelOpen, selectedCategory]);
+  }, [adminPanelOpen, selectedCategory, privacyPolicyOpen]);
 
   // Sync activeTool with URL & Document Title & SEO meta tags
   useEffect(() => {
@@ -202,6 +222,11 @@ function AppContent() {
 
       if (window.location.pathname !== newPath) {
         window.history.pushState({ toolId: activeTool.id }, '', newPath);
+      }
+    } else if (privacyPolicyOpen) {
+      const newPath = `${basePath}/privacy-policy`;
+      if (window.location.pathname !== newPath) {
+        window.history.pushState({}, '', newPath);
       }
     } else if (adminPanelOpen) {
       const newPath = `${basePath}/admin`;
@@ -218,7 +243,8 @@ function AppContent() {
       const isSubRoute = window.location.pathname.includes('/tools/') || 
                          window.location.pathname.includes('/calculators/') || 
                          window.location.pathname.includes('/category/') ||
-                         window.location.pathname.includes('/admin');
+                         window.location.pathname.includes('/admin') ||
+                         window.location.pathname.includes('/privacy-policy');
       if (isSubRoute) {
         window.history.pushState({}, '', homePath);
       }
@@ -226,7 +252,7 @@ function AppContent() {
 
     // Scroll to top upon page navigation
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeTool, adminPanelOpen, selectedCategory, notFoundSlug, getBasePath]);
+  }, [activeTool, adminPanelOpen, selectedCategory, notFoundSlug, privacyPolicyOpen, getBasePath]);
 
   const handleGoHome = useCallback(() => {
     setActiveTool(null);
@@ -234,11 +260,26 @@ function AppContent() {
     setNotFoundSlug(null);
     setMemberOnlyFilter(false);
     setAdminPanelOpen(false);
+    setPrivacyPolicyOpen(false);
     const basePath = getBasePath();
     const homePath = basePath ? `${basePath}/` : '/';
     if (window.location.pathname !== homePath) {
       window.history.pushState({}, '', homePath);
     }
+  }, [getBasePath]);
+
+  const handleOpenPrivacyPolicy = useCallback(() => {
+    setPrivacyPolicyOpen(true);
+    setActiveTool(null);
+    setSelectedCategory(null);
+    setNotFoundSlug(null);
+    setAdminPanelOpen(false);
+    const basePath = getBasePath();
+    const newPath = `${basePath}/privacy-policy`;
+    if (window.location.pathname !== newPath) {
+      window.history.pushState({}, '', newPath);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [getBasePath]);
 
   // Global Keyboard Shortcuts (Cmd+K or Ctrl+K for search, ? for cheat sheet, Esc to close)
@@ -326,6 +367,7 @@ function AppContent() {
     setActiveTool(tool);
     setNotFoundSlug(null);
     setAdminPanelOpen(false);
+    setPrivacyPolicyOpen(false);
   };
 
   const handleSelectCategory = (catId: string | null) => {
@@ -333,6 +375,7 @@ function AppContent() {
     setActiveTool(null);
     setNotFoundSlug(null);
     setAdminPanelOpen(false);
+    setPrivacyPolicyOpen(false);
     const basePath = getBasePath();
     const newPath = catId ? `${basePath}/category/${catId}` : (basePath ? `${basePath}/` : '/');
     if (window.location.pathname !== newPath) {
@@ -415,6 +458,16 @@ function AppContent() {
                     onSelectTool={handleSelectTool}
                   />
                 </div>
+              ) : privacyPolicyOpen ? (
+                <div
+                  key="privacy-policy"
+                  className="w-full animate-in fade-in duration-200"
+                >
+                  <PrivacyPolicyPage
+                    onGoHome={handleGoHome}
+                    onSelectCategory={handleSelectCategory}
+                  />
+                </div>
               ) : adminPanelOpen ? (
                 <div
                   key="admin-panel"
@@ -460,6 +513,7 @@ function AppContent() {
               onSelectCategory={handleSelectCategory}
               onOpenAdmin={() => setAdminPanelOpen(true)}
               onOpenHelp={() => setCheatSheetOpen(true)}
+              onOpenPrivacyPolicy={handleOpenPrivacyPolicy}
             />
           </div>
         </div>

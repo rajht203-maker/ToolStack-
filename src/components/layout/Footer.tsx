@@ -6,9 +6,15 @@ interface FooterProps {
   onSelectCategory: (catId: string | null) => void;
   onOpenAdmin: () => void;
   onOpenHelp?: () => void;
+  onOpenPrivacyPolicy?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenAdmin, onOpenHelp }) => {
+export const Footer: React.FC<FooterProps> = ({ 
+  onSelectCategory, 
+  onOpenAdmin, 
+  onOpenHelp,
+  onOpenPrivacyPolicy
+}) => {
   return (
     <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 transition-colors pt-12 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -146,6 +152,22 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenAdmin, o
                 </button>
               </li>
               <li>
+                <a
+                  href="/privacy-policy"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onOpenPrivacyPolicy) {
+                      onOpenPrivacyPolicy();
+                    } else {
+                      window.location.href = '/privacy-policy';
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
+                >
+                  Privacy Policy &amp; Terms
+                </a>
+              </li>
+              <li>
                 <button
                   onClick={onOpenAdmin}
                   className="text-amber-600 dark:text-amber-400 font-semibold hover:underline"
@@ -162,7 +184,21 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenAdmin, o
           <div>
             © {new Date().getFullYear()} TOOLSTACK INTERACTIVE. ALL 52 ONLINE TOOLS ARE FREE.
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+            <a
+              href="/privacy-policy"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onOpenPrivacyPolicy) {
+                  onOpenPrivacyPolicy();
+                } else {
+                  window.location.href = '/privacy-policy';
+                }
+              }}
+              className="text-indigo-600 dark:text-indigo-400 hover:underline font-bold transition-colors"
+            >
+              Privacy Policy
+            </a>
             {onOpenHelp && (
               <button 
                 onClick={onOpenHelp} 
