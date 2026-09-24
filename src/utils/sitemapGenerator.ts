@@ -26,7 +26,15 @@ export function getAllSitemapURLs(customOrigin?: string): SitemapURLItem[] {
     priority: '1.0'
   });
 
-  // 2. Category Pages
+  // 2. Legal / Compliance Pages (Privacy Policy)
+  urls.push({
+    loc: `${origin}${basePath}/privacy-policy`,
+    lastmod: today,
+    changefreq: 'monthly',
+    priority: '0.7'
+  });
+
+  // 3. Category Pages
   for (const cat of CATEGORIES) {
     urls.push({
       loc: `${origin}${basePath}/category/${cat.id}`,

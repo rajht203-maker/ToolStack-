@@ -6,7 +6,6 @@ import {
   Lock, 
   User, 
   AlertCircle, 
-  ShieldAlert, 
   Sparkles, 
   Check, 
   ArrowLeft,
@@ -114,16 +113,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  // Quick fill for test admin account
-  const fillAdminTest = () => {
-    setMode('signin');
-    setEmail('rajht203@gmail.com');
-    setPassword('AdminSecure123!');
-    setDisplayName('Raj H (Admin)');
-    setLocalError(null);
-    setResetSuccessMessage(null);
   };
 
   return (
@@ -410,19 +399,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </button>
           </div>
         )}
-
-        {/* Quick Admin test login helper */}
-        <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
-          <button
-            id="auth-quick-admin-fill-btn"
-            type="button"
-            onClick={fillAdminTest}
-            className="text-[11px] text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-center gap-1 mx-auto transition-colors"
-          >
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Fill Admin Credentials (rajht203@gmail.com)</span>
-          </button>
-        </div>
       </div>
     </div>
   );

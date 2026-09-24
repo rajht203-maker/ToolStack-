@@ -1,6 +1,7 @@
 import React from 'react';
 import { CATEGORIES, PLATFORM_STATS } from '../../data/toolsData';
 import { Wrench, Shield, Lock, Zap, Heart } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 interface FooterProps {
   onSelectCategory: (catId: string | null) => void;
@@ -15,6 +16,7 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenHelp,
   onOpenPrivacyPolicy
 }) => {
+  const { isAdmin } = useAuth();
   return (
     <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 transition-colors pt-12 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -167,14 +169,16 @@ export const Footer: React.FC<FooterProps> = ({
                   Privacy Policy &amp; Terms
                 </a>
               </li>
-              <li>
-                <button
-                  onClick={onOpenAdmin}
-                  className="text-amber-600 dark:text-amber-400 font-semibold hover:underline"
-                >
-                  Admin Management Portal
-                </button>
-              </li>
+              {isAdmin && (
+                <li>
+                  <button
+                    onClick={onOpenAdmin}
+                    className="text-amber-600 dark:text-amber-400 font-semibold hover:underline"
+                  >
+                    Admin Management Portal
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
         </div>
@@ -210,9 +214,11 @@ export const Footer: React.FC<FooterProps> = ({
               </button>
             )}
             <span className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Vercel Edge Ready</span>
-            <button onClick={onOpenAdmin} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-              Admin Access
-            </button>
+            {isAdmin && (
+              <button onClick={onOpenAdmin} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                Admin Access
+              </button>
+            )}
             <span className="text-emerald-500 font-bold flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               System Operational

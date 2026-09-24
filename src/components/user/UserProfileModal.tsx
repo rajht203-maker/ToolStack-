@@ -36,8 +36,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     user, 
     profile, 
     isAdmin, 
-    adminOverride,
-    toggleAdminOverride, 
     updateUserProfile,
     favorites, 
     history, 
@@ -258,28 +256,26 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 </div>
               </div>
 
-              {/* Admin Access Panel Link or Test Switcher */}
-              <div className="p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/60 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                    <h3 className="text-xs font-bold text-indigo-950 dark:text-indigo-200 uppercase tracking-wider">
-                      Administrator Console Access
-                    </h3>
-                  </div>
-                  {isAdmin && (
+              {/* Admin Access Panel Link - ONLY visible to verified Administrators */}
+              {isAdmin ? (
+                <div className="p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <h3 className="text-xs font-bold text-indigo-950 dark:text-indigo-200 uppercase tracking-wider">
+                        Administrator Console Access
+                      </h3>
+                    </div>
                     <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                       AUTHORIZED
                     </span>
-                  )}
-                </div>
+                  </div>
 
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Manage all 75+ tools, review system health, monitor user registrations, and deploy global site announcements.
-                </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Manage tools, review system health, monitor user feedback, and configure global site announcements.
+                  </p>
 
-                <div className="flex flex-wrap items-center gap-3 pt-1">
-                  {isAdmin ? (
+                  <div className="flex items-center gap-3 pt-1">
                     <button
                       onClick={() => {
                         onClose();
@@ -290,29 +286,14 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                       <ExternalLink className="w-3.5 h-3.5" />
                       Launch Admin Panel
                     </button>
-                  ) : (
-                    <button
-                      onClick={toggleAdminOverride}
-                      className="px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                      Enable Demo Admin Mode
-                    </button>
-                  )}
-
-                  {isAdmin && (
-                    <label className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer ml-auto">
-                      <input
-                        type="checkbox"
-                        checked={adminOverride}
-                        onChange={toggleAdminOverride}
-                        className="w-3.5 h-3.5 text-indigo-600 rounded"
-                      />
-                      Override Mode Active
-                    </label>
-                  )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-3">
+                  <Shield className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <span>Standard Member account active. Full access to all 50+ client-side utility tools.</span>
+                </div>
+              )}
             </div>
           )}
 

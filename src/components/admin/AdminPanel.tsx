@@ -103,8 +103,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<'all' | 'pending' | 'reviewed' | 'resolved'>('all');
   const [feedbackSearch, setFeedbackSearch] = useState('');
 
+  const userCleanEmail = (user?.email || '').trim().toLowerCase();
+  const isAuthorized = Boolean(
+    user && 
+    (userCleanEmail === 'rajht203@gmail.com' || (profile?.role === 'admin' && profile?.status !== 'suspended')) &&
+    isAdmin
+  );
+
   // Load live site settings from Firestore
   useEffect(() => {
+    if (!isAuthorized) return;
     const fetchSettings = async () => {
       try {
         const snap = await getDoc(doc(db, 'site_settings', 'global'));
@@ -120,10 +128,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
       }
     };
     fetchSettings();
-  }, []);
+  }, [isAuthorized]);
 
   // Fetch users list when Users tab is opened
   const loadUsers = async () => {
+    if (!isAuthorized) return;
     setLoadingUsers(true);
     try {
       const users = await getAllUsers();
@@ -137,6 +146,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
 
   // Fetch audit logs when Logs tab is opened
   const loadLogs = async () => {
+    if (!isAuthorized) return;
     setLoadingLogs(true);
     try {
       const logs = await getAdminLogs(50);
@@ -150,6 +160,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
 
   // Fetch feedback and bug reports
   const loadFeedback = async () => {
+    if (!isAuthorized) return;
     setLoadingFeedback(true);
     try {
       const items = await getAllFeedback(100);
@@ -162,11 +173,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
   };
 
   useEffect(() => {
+    if (!isAuthorized) return;
     // Pre-load feedback count for badge
     loadFeedback();
-  }, []);
+  }, [isAuthorized]);
 
   useEffect(() => {
+    if (!isAuthorized) return;
     if (activeTab === 'users') {
       loadUsers();
     } else if (activeTab === 'logs') {
@@ -174,7 +187,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
     } else if (activeTab === 'feedback') {
       loadFeedback();
     }
-  }, [activeTab]);
+  }, [activeTab, isAuthorized]);
 
   const handleUpdateFeedbackStatus = async (feedbackId: string, status: 'pending' | 'reviewed' | 'resolved') => {
     try {
@@ -339,28 +352,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
     URL.revokeObjectURL(url);
   };
 
-  // Authorization check
-  const isAuthorized = isAdmin || user?.email === 'rajht203@gmail.com';
-
   if (!isAuthorized) {
     return (
-      <div className="max-w-2xl mx-auto my-12 p-8 bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/60 rounded-3xl text-center space-y-4 shadow-xl">
-        <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center">
-          <Lock className="w-7 h-7" />
+      <div className="max-w-2xl mx-auto my-12 p-8 bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/60 rounded-3xl text-center space-y-5 shadow-xl">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center shadow-inner">
+          <Lock className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-          Restricted Administrator Access
-        </h2>
-        <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-          Access to the ToolStack system control center requires verified administrator credentials.
-          Please sign in with your authorized admin account (e.g. <span className="font-semibold text-slate-700 dark:text-slate-300">rajht203@gmail.com</span>).
-        </p>
-        <button
-          onClick={onClose}
-          className="px-5 py-2.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-semibold hover:opacity-90"
-        >
-          Return to Platform
-        </button>
+        <div className="space-y-2">
+          <span className="px-2.5 py-0.5 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-[10px] font-black uppercase rounded-full tracking-wider border border-rose-200 dark:border-rose-900">
+            Access Restricted
+          </span>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white">
+            Administrator Access Only
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+            Standard member and guest accounts are strictly not permitted to access or join the administrator control console. Access requires authorized administrator authentication.
+          </p>
+        </div>
+        <div className="pt-2">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold hover:opacity-90 transition-opacity shadow-xs"
+          >
+            Return to Tools Platform
+          </button>
+        </div>
       </div>
     );
   }

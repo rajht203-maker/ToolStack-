@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
@@ -22,10 +22,11 @@ import { getToolBySlug, TOOLS_DATA, CATEGORIES } from './data/toolsData';
 import { getHomeSEOConfig, getCategorySEOConfig, getAdminSEOConfig, getPrivacyPolicySEOConfig } from './utils/seoConfig';
 import { ToolItem } from './types';
 import { recordToolClick } from './utils/toolAnalytics';
-import { Sparkles, Shield, X } from 'lucide-react';
+import { Sparkles, Shield, Lock, X, ArrowLeft, LogIn } from 'lucide-react';
 
 function AppContent() {
   const { isThemeModalOpen, closeThemeModal, openThemeModal } = useTheme();
+  const { isAdmin, user, loading: authLoading } = useAuth();
   const [activeTool, setActiveTool] = useState<ToolItem | null>(null);
   const [notFoundSlug, setNotFoundSlug] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -37,6 +38,7 @@ function AppContent() {
   const [cheatSheetOpen, setCheatSheetOpen] = useState<boolean>(false);
   const [adminPanelOpen, setAdminPanelOpen] = useState<boolean>(false);
   const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState<boolean>(false);
+  const [isAdsTxt, setIsAdsTxt] = useState<boolean>(false);
   const [showBanner, setShowBanner] = useState<boolean>(true);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -173,6 +175,21 @@ function AppContent() {
       setAdminPanelOpen(false);
       return;
     }
+
+    const isAdsTxtRoute = pathname.endsWith('/ads.txt') || 
+                          pathname === '/ads.txt' ||
+                          searchParams.get('p') === 'ads.txt' || 
+                          hash === 'ads.txt';
+    if (isAdsTxtRoute) {
+      setIsAdsTxt(true);
+      setActiveTool(null);
+      setNotFoundSlug(null);
+      setSelectedCategory(null);
+      setAdminPanelOpen(false);
+      setPrivacyPolicyOpen(false);
+      return;
+    }
+    setIsAdsTxt(false);
 
     // Default: home
     setActiveTool(null);
@@ -383,6 +400,14 @@ function AppContent() {
     }
   };
 
+  if (isAdsTxt) {
+    return (
+      <pre className="m-0 p-4 font-mono text-sm text-black dark:text-white bg-white dark:bg-black whitespace-pre-wrap select-all">
+        google.com, pub-9951412841260181, DIRECT, f08c47fec0942fa0
+      </pre>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-slate-950 text-[#0F172A] dark:text-slate-100 font-sans transition-colors">
         {/* Dynamic SEO & Structured Data Head (for Home, Category & Admin views) */}
@@ -469,15 +494,67 @@ function AppContent() {
                   />
                 </div>
               ) : adminPanelOpen ? (
-                <div
-                  key="admin-panel"
-                  className="w-full animate-admin-fade-in"
-                >
-                  <AdminPanel
-                    onClose={() => setAdminPanelOpen(false)}
-                    onSelectTool={handleSelectTool}
-                  />
-                </div>
+                authLoading ? (
+                  <div className="w-full min-h-[60vh] flex flex-col items-center justify-center space-y-3">
+                    <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-xs text-slate-500">Verifying administrator authorization...</p>
+                  </div>
+                ) : isAdmin ? (
+                  <div
+                    key="admin-panel"
+                    className="w-full animate-admin-fade-in"
+                  >
+                    <AdminPanel
+                      onClose={handleGoHome}
+                      onSelectTool={handleSelectTool}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    key="admin-access-denied"
+                    className="max-w-xl mx-auto my-16 px-6 py-10 bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/60 rounded-3xl text-center space-y-5 shadow-2xl animate-in zoom-in-95 duration-200"
+                  >
+                    <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 flex items-center justify-center shadow-inner">
+                      <Lock className="w-8 h-8" />
+                    </div>
+                    <div className="space-y-2">
+                      <span className="px-3 py-1 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-[10px] font-black uppercase rounded-full tracking-wider border border-rose-200 dark:border-rose-900">
+                        Restricted Access
+                      </span>
+                      <h2 className="text-2xl font-black text-slate-900 dark:text-white">
+                        Administrator Access Only
+                      </h2>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                        Normal users and visitors are not allowed to access or join the admin panel. Access to this management console is strictly restricted to verified site administrators.
+                      </p>
+                      {user && (
+                        <div className="pt-2">
+                          <span className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium">
+                            Signed in as: <strong className="text-slate-900 dark:text-white">{user.email}</strong> (Standard Member)
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                      {!user && (
+                        <button
+                          onClick={() => setAuthModalOpen(true)}
+                          className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-sm"
+                        >
+                          <LogIn className="w-4 h-4" />
+                          <span>Sign In with Admin Account</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={handleGoHome}
+                        className="w-full sm:w-auto px-5 py-2.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Return to Homepage</span>
+                      </button>
+                    </div>
+                  </div>
+                )
               ) : activeTool ? (
                 <div
                   key={`tool-${activeTool.id}`}

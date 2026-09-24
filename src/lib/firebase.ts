@@ -19,7 +19,6 @@ import {
   getFirestore, 
   initializeFirestore,
   doc, 
-  getDocFromServer,
   collection, 
   setDoc, 
   getDoc, 
@@ -38,11 +37,11 @@ export { getFriendlyAuthErrorMessage } from '../utils/authErrors';
 // Initialize or reuse Firebase App instance
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firestore with auto-detect long polling to prevent connection drops in iframes/proxies
+// Initialize Firestore with forced HTTP long polling to eliminate WebSocket drops and connection errors in iframes, proxies, and preview environments
 let firestoreDb;
 try {
   firestoreDb = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,
+    experimentalForceLongPolling: true,
   }, firebaseConfig.firestoreDatabaseId);
 } catch {
   firestoreDb = getFirestore(app, firebaseConfig.firestoreDatabaseId);
@@ -120,29 +119,14 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 // Connection test helper per Firebase integration guidelines
 export async function testConnection(): Promise<boolean> {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    return true;
+    const snap = await getDoc(doc(db, 'site_settings', 'global'));
+    return snap.exists();
   } catch (error: any) {
     if (error?.code === 'unavailable' || (error instanceof Error && error.message.includes('offline'))) {
       // The client is operating in offline mode or waiting for connection
       return false;
     }
     return false;
-  }
-}
-
-// Safely probe connection when browser environment is ready without blocking initialization
-if (typeof window !== 'undefined') {
-  const probe = () => {
-    if (navigator.onLine !== false) {
-      testConnection().catch(() => {});
-    }
-  };
-
-  if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(probe, { timeout: 3000 });
-  } else {
-    setTimeout(probe, 1500);
   }
 }
 

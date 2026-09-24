@@ -28,7 +28,6 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   profile: UserProfile | null;
   isAdmin: boolean;
-  adminOverride: boolean;
   loading: boolean;
   error: string | null;
   clearError: () => void;
@@ -55,8 +54,6 @@ interface AuthContextType {
   deletePreset: (presetId: string) => Promise<void>;
   clearHistory: () => Promise<void>;
   updateSiteSettings: (settings: Partial<SiteSettings>) => Promise<void>;
-  setIsAdminOverride: (override: boolean) => void;
-  toggleAdminOverride: () => void;
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
   getAllUsers: () => Promise<UserProfile[]>;
   updateUserRole: (userId: string, role: 'admin' | 'user') => Promise<void>;
@@ -84,7 +81,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [history, setHistory] = useState<ToolHistoryItem[]>([]);
   const [presets, setPresets] = useState<SavedPreset[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
-  const [adminOverride, setAdminOverride] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const clearError = () => setError(null);
@@ -471,7 +467,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const userCleanEmail = (currentUser?.email || '').trim().toLowerCase();
+  const isOwnerAdmin = userCleanEmail === 'rajht203@gmail.com';
+  const isRoleAdmin = userProfile?.role === 'admin' && userProfile?.status !== 'suspended';
+  const isAdmin = Boolean(currentUser && (isOwnerAdmin || isRoleAdmin));
+
   const updateSiteSettings = async (settings: Partial<SiteSettings>) => {
+    if (!isAdmin) {
+      console.warn('Unauthorized updateSiteSettings attempt');
+      return;
+    }
     const updated = { ...siteSettings, ...settings, updatedAt: new Date().toISOString(), updatedBy: currentUser?.email || 'admin' };
     setSiteSettings(updated);
     if (currentUser) {
@@ -481,10 +486,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // ignore
       }
     }
-  };
-
-  const toggleAdminOverride = () => {
-    setAdminOverride(prev => !prev);
   };
 
   const updateUserProfile = async (data: Partial<UserProfile>) => {
@@ -514,6 +515,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const getAllUsers = async (): Promise<UserProfile[]> => {
+    if (!isAdmin) {
+      console.warn('Unauthorized getAllUsers attempt');
+      return [];
+    }
     const list: UserProfile[] = [];
     try {
       const snap = await getDocs(collection(db, 'users'));
@@ -528,47 +533,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       list.unshift(userProfile);
     }
 
-    if (list.length === 0) {
-      list.push(
-        {
-          userId: 'admin-master',
-          email: 'rajht203@gmail.com',
-          displayName: 'Super Admin',
-          role: 'admin',
-          status: 'active',
-          createdAt: new Date().toISOString()
-        },
-        {
-          userId: 'demo-user-1',
-          email: 'alex.developer@techcorp.io',
-          displayName: 'Alex Rivers',
-          role: 'user',
-          status: 'active',
-          createdAt: '2025-01-14T10:00:00.000Z'
-        },
-        {
-          userId: 'demo-user-2',
-          email: 'sarah.designer@creativehub.com',
-          displayName: 'Sarah Chen',
-          role: 'user',
-          status: 'active',
-          createdAt: '2025-02-01T14:30:00.000Z'
-        },
-        {
-          userId: 'demo-user-3',
-          email: 'marcus.data@analyticslab.co',
-          displayName: 'Marcus Brody',
-          role: 'admin',
-          status: 'active',
-          createdAt: '2025-02-20T08:15:00.000Z'
-        }
-      );
-    }
-
     return list;
   };
 
   const logAdminAction = async (action: string, details: string) => {
+    if (!isAdmin) return;
     const logItem: AdminAuditLog = {
       id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       adminId: currentUser?.uid || 'system-admin',
@@ -585,6 +554,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUserRole = async (userId: string, role: 'admin' | 'user') => {
+    if (!isAdmin) {
+      throw new Error('Access denied: Administrator permissions required.');
+    }
     try {
       await setDoc(doc(db, 'users', userId), { role, updatedAt: new Date().toISOString() }, { merge: true });
       await logAdminAction('UPDATE_ROLE', `Changed user ${userId} role to ${role}`);
@@ -594,6 +566,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUserStatus = async (userId: string, status: 'active' | 'suspended') => {
+    if (!isAdmin) {
+      throw new Error('Access denied: Administrator permissions required.');
+    }
     try {
       await setDoc(doc(db, 'users', userId), { status, updatedAt: new Date().toISOString() }, { merge: true });
       await logAdminAction('UPDATE_STATUS', `Set user ${userId} status to ${status}`);
@@ -603,6 +578,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteUserAccount = async (userId: string) => {
+    if (!isAdmin) {
+      throw new Error('Access denied: Administrator permissions required.');
+    }
     try {
       await deleteDoc(doc(db, 'users', userId));
       await logAdminAction('DELETE_USER', `Deleted user account ${userId}`);
@@ -612,6 +590,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const createAdminUser = async (email: string, displayName: string, role: 'admin' | 'user') => {
+    if (!isAdmin) {
+      throw new Error('Access denied: Administrator permissions required.');
+    }
     const newUid = `user-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const newDoc: UserProfile = {
       userId: newUid,
@@ -630,6 +611,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const getAdminLogs = async (countLimit?: number): Promise<AdminAuditLog[]> => {
+    if (!isAdmin) return [];
     let logs: AdminAuditLog[] = [];
     try {
       const snap = await getDocs(collection(db, 'admin_logs'));
@@ -638,20 +620,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.warn('Get admin logs error:', e);
     }
-    if (logs.length === 0) {
-      logs.push({
-        id: 'log-seed-1',
-        adminId: 'super-admin',
-        adminEmail: 'rajht203@gmail.com',
-        action: 'SYSTEM_BOOTSTRAP',
-        details: 'Initial system boot and security rules verification completed successfully.',
-        createdAt: new Date().toISOString()
-      });
-    }
     return countLimit ? logs.slice(0, countLimit) : logs;
   };
 
   const clearAdminLogs = async () => {
+    if (!isAdmin) return;
     try {
       const snap = await getDocs(collection(db, 'admin_logs'));
       snap.forEach(async d => {
@@ -662,8 +635,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isAdmin = userProfile?.role === 'admin' || currentUser?.email === 'rajht203@gmail.com' || adminOverride;
-
   return (
     <AuthContext.Provider value={{
       currentUser,
@@ -671,7 +642,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userProfile,
       profile: userProfile,
       isAdmin,
-      adminOverride,
       loading,
       error,
       clearError,
@@ -698,8 +668,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       deletePreset,
       clearHistory,
       updateSiteSettings,
-      setIsAdminOverride: setAdminOverride,
-      toggleAdminOverride,
       updateUserProfile,
       getAllUsers,
       updateUserRole,
