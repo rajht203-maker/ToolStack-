@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { CATEGORIES, TOOLS_DATA, PLATFORM_STATS } from '../../data/toolsData';
 import { ToolItem, CategoryInfo } from '../../types';
 import { ToolCard } from '../tools/ToolCard';
+import { MultiplexAd } from '../ads/MultiplexAd';
+import { InFeedAd } from '../ads/InFeedAd';
 import { IconRenderer } from '../common/IconRenderer';
 import { ProblemSolverBar } from '../common/ProblemSolverBar';
 import { useTheme } from '../../context/ThemeContext';
@@ -418,11 +420,22 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-4">
-              {filteredTools.map((tool) => (
-                <ToolCard key={tool.id} tool={tool} onSelect={handleToolSelection} />
+              {filteredTools.map((tool, index) => (
+                <React.Fragment key={tool.id}>
+                  <ToolCard tool={tool} onSelect={handleToolSelection} />
+                  {index === 5 && filteredTools.length > 6 && (
+                    <InFeedAd key="infeed-ad-1" asCard={true} />
+                  )}
+                  {index === 23 && filteredTools.length > 24 && (
+                    <InFeedAd key="infeed-ad-2" asCard={true} />
+                  )}
+                </React.Fragment>
               ))}
             </div>
           )}
+
+          {/* Multiplex native recommendation ad unit */}
+          <MultiplexAd className="mt-8 mb-2" />
         </div>
       </section>
 

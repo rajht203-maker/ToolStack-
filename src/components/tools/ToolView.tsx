@@ -5,6 +5,8 @@ import { IconRenderer } from '../common/IconRenderer';
 import { ToolDispatcher } from './ToolDispatcher';
 import { ToolCard } from './ToolCard';
 import { ToolFeedbackComponent } from './ToolFeedbackComponent';
+import { MultiplexAd } from '../ads/MultiplexAd';
+import { InFeedAd } from '../ads/InFeedAd';
 import { getRelatedTools, CATEGORIES } from '../../data/toolsData';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -667,12 +669,20 @@ export const ToolView: React.FC<ToolViewProps> = ({
             Related Tools You Might Like
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {relatedTools.map((relTool) => (
-              <ToolCard key={relTool.id} tool={relTool} onSelect={onSelectTool} />
+            {relatedTools.map((relTool, idx) => (
+              <React.Fragment key={relTool.id}>
+                <ToolCard tool={relTool} onSelect={onSelectTool} />
+                {idx === 1 && relatedTools.length >= 2 && (
+                  <InFeedAd asCard={true} />
+                )}
+              </React.Fragment>
             ))}
           </div>
         </div>
       )}
+
+      {/* Multiplex Recommended Content Ad */}
+      <MultiplexAd className="pt-2" />
     </article>
   );
 };

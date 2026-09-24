@@ -17,6 +17,7 @@ import {
 } from 'firebase/auth';
 import { 
   getFirestore, 
+  initializeFirestore,
   doc, 
   getDocFromServer,
   collection, 
@@ -37,9 +38,16 @@ export { getFriendlyAuthErrorMessage } from '../utils/authErrors';
 // Initialize or reuse Firebase App instance
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firestore as mandated by Firebase Integration Skill:
-// export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+// Initialize Firestore with auto-detect long polling to prevent connection drops in iframes/proxies
+let firestoreDb;
+try {
+  firestoreDb = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+  }, firebaseConfig.firestoreDatabaseId);
+} catch {
+  firestoreDb = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+}
+export const db = firestoreDb;
 
 // Initialize Authentication with explicit persistence for page refreshes
 export const auth = getAuth(app);
@@ -114,14 +122,27 @@ export async function testConnection(): Promise<boolean> {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
     return true;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('Please check your Firebase configuration.');
+  } catch (error: any) {
+    if (error?.code === 'unavailable' || (error instanceof Error && error.message.includes('offline'))) {
+      // The client is operating in offline mode or waiting for connection
+      return false;
     }
     return false;
   }
 }
 
-// Probe connection once on boot as specified in the Firebase skill
-testConnection().catch(() => {});
+// Safely probe connection when browser environment is ready without blocking initialization
+if (typeof window !== 'undefined') {
+  const probe = () => {
+    if (navigator.onLine !== false) {
+      testConnection().catch(() => {});
+    }
+  };
+
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(probe, { timeout: 3000 });
+  } else {
+    setTimeout(probe, 1500);
+  }
+}
 
