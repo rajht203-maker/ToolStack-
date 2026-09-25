@@ -234,15 +234,20 @@ export const ToolView: React.FC<ToolViewProps> = ({
       >
         <ol className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 overflow-x-auto no-scrollbar py-0.5">
           <li className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={onBack}
+            <a
+              href="/"
+              onClick={(e) => {
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                  e.preventDefault();
+                  onBack();
+                }
+              }}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors cursor-pointer"
               title="Return to Home dashboard"
             >
               <Home className="w-3.5 h-3.5" />
               <span>Home</span>
-            </button>
+            </a>
           </li>
           
           <li className="shrink-0 text-slate-300 dark:text-slate-600" aria-hidden="true">
@@ -250,9 +255,14 @@ export const ToolView: React.FC<ToolViewProps> = ({
           </li>
 
           <li className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={() => onSelectCategory(tool.category)}
+            <a
+              href={`/category/${tool.category}`}
+              onClick={(e) => {
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                  e.preventDefault();
+                  onSelectCategory(tool.category);
+                }
+              }}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors cursor-pointer"
               title={`View all ${categoryInfo?.name || tool.category} tools`}
             >
@@ -260,7 +270,7 @@ export const ToolView: React.FC<ToolViewProps> = ({
                 <IconRenderer name={categoryInfo.icon} className="w-3.5 h-3.5 text-indigo-500" />
               )}
               <span>{categoryInfo?.name || tool.category}</span>
-            </button>
+            </a>
           </li>
 
           <li className="shrink-0 text-slate-300 dark:text-slate-600" aria-hidden="true">
@@ -322,6 +332,37 @@ export const ToolView: React.FC<ToolViewProps> = ({
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
                 {tool.description}
               </p>
+
+              {/* Useful Contextual Internal Linking between Related Tools */}
+              {relatedTools.length > 0 && (
+                <div className="pt-2 flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    Paired Tools:
+                  </span>
+                  {relatedTools.slice(0, 3).map((rel) => {
+                    const relPath = rel.category === 'calculator' 
+                      ? `/calculators/${rel.slug}` 
+                      : `/tools/${rel.slug}`;
+                    return (
+                      <a
+                        key={rel.id}
+                        href={relPath}
+                        onClick={(e) => {
+                          if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                            e.preventDefault();
+                            onSelectTool(rel);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-400 transition-colors border border-slate-200/60 dark:border-slate-700/60"
+                        title={`Open ${rel.name}`}
+                      >
+                        <span>{rel.name}</span>
+                        <ChevronRight className="w-3 h-3 text-slate-400" />
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -575,27 +616,29 @@ export const ToolView: React.FC<ToolViewProps> = ({
           </ol>
         </div>
 
-        {/* FAQs */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
-              Frequently Asked Questions
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {tool.faqs.map((faq, idx) => (
-              <div key={idx} className="space-y-1 text-xs">
-                <div className="font-semibold text-slate-800 dark:text-slate-200">
-                  {faq.question}
+        {/* FAQs - Rendered only when visible FAQs exist, exactly matching JSON-LD Schema */}
+        {tool.faqs && tool.faqs.length > 0 && (
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2">
+              <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
+                Frequently Asked Questions
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {tool.faqs.map((faq, idx) => (
+                <div key={idx} className="space-y-1 text-xs">
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+                    {faq.question}
+                  </div>
+                  <div className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                    {faq.answer}
+                  </div>
                 </div>
-                <div className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                  {faq.answer}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Tool Technical Specifications & Overview for Search Engines & Users */}

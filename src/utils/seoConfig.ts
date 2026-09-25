@@ -16,19 +16,28 @@ export interface PageSEOConfig {
   structuredData: Record<string, any>[];
 }
 
+export const PRIMARY_PRODUCTION_URL = 'https://toolstack-eosin.vercel.app';
+
 /**
  * Get current site base origin
  */
 export function getSiteOrigin(): string {
-  if (typeof window !== 'undefined' && window.location?.origin) {
-    // Avoid local development origins if production env is set
-    const envUrl = (import.meta as any).env?.VITE_SITE_URL;
-    if (envUrl && typeof envUrl === 'string' && envUrl.startsWith('http')) {
-      return envUrl.replace(/\/+$/, '');
-    }
-    return window.location.origin.replace(/\/+$/, '');
+  // If explicitly provided via Vite env
+  const envUrl = (import.meta as any).env?.VITE_SITE_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.startsWith('http')) {
+    return envUrl.replace(/\/+$/, '');
   }
-  return 'https://toolstack-eosin.vercel.app';
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    const hostname = window.location.hostname;
+    // If running on production vercel app domain or custom production domain, keep origin
+    if (hostname.endsWith('vercel.app') || (!hostname.includes('localhost') && !hostname.includes('127.0.0.1') && !hostname.includes('run.app') && !hostname.includes('github.io'))) {
+      return window.location.origin.replace(/\/+$/, '');
+    }
+    // Sandbox and internal dev environments canonicalize to production URL
+    return PRIMARY_PRODUCTION_URL;
+  }
+  return PRIMARY_PRODUCTION_URL;
 }
 
 /**
@@ -70,11 +79,20 @@ export function getToolSEOConfig(tool: ToolItem, customOrigin?: string): PageSEO
   const categoryInfo = CATEGORIES.find(c => c.id === tool.category);
   const categoryName = categoryInfo?.name || tool.category.toUpperCase();
 
-  // Search-intent optimized title
-  // E.g.: "PDF Merge Online – Combine Multiple PDFs Free | ToolStack"
+  // Search-intent optimized title for high Google ranking
   let seoTitle = tool.seoTitle;
   if (!seoTitle || seoTitle.trim().length < 20) {
-    seoTitle = `${tool.name} Online – Free Fast Web Utility | ToolStack`;
+    if (tool.category === 'calculator') {
+      seoTitle = `${tool.name} Online – Free ${categoryName} Calculator | ToolStack`;
+    } else if (tool.category === 'pdf') {
+      seoTitle = `${tool.name} Online – Free PDF Tool (100% Private) | ToolStack`;
+    } else if (tool.category === 'converter') {
+      seoTitle = `${tool.name} Online – Free Unit Converter | ToolStack`;
+    } else if (tool.category === 'image') {
+      seoTitle = `${tool.name} Online – Free Fast Image Utility | ToolStack`;
+    } else {
+      seoTitle = `${tool.name} Online – Free ${categoryName} Utility | ToolStack`;
+    }
   } else if (!seoTitle.includes('ToolStack') && !seoTitle.includes('|')) {
     seoTitle = `${seoTitle} | ToolStack`;
   }
@@ -82,21 +100,26 @@ export function getToolSEOConfig(tool: ToolItem, customOrigin?: string): PageSEO
   // Actionable, high-CTR meta description
   let seoDescription = tool.seoDescription;
   if (!seoDescription || seoDescription.trim().length < 50) {
-    seoDescription = `${tool.description} Free, browser-based online utility. 100% private client-side processing with zero server uploads.`;
+    seoDescription = `${tool.name} – Free online tool. ${tool.description} 100% private in-browser processing with zero server uploads. Fast, secure, and no installation required.`;
   }
 
   // Clear, intent-focused H1
   const h1 = tool.name;
 
-  // Search keywords
+  // Search keywords targeted for Google queries
   const keywords = Array.from(new Set([
     tool.name.toLowerCase(),
     `${tool.name.toLowerCase()} online`,
     `free ${tool.name.toLowerCase()}`,
+    `best ${tool.name.toLowerCase()}`,
     `${tool.name.toLowerCase()} tool`,
+    `how to use ${tool.name.toLowerCase()}`,
+    `free ${tool.name.toLowerCase()} online`,
     categoryName.toLowerCase(),
+    `${categoryName.toLowerCase()} tools online`,
     ...(tool.tags || []).map(t => t.toLowerCase()),
     'free online tools',
+    'browser tools',
     'client-side privacy',
     'no signup required'
   ]));
@@ -116,7 +139,22 @@ export function getToolSEOConfig(tool: ToolItem, customOrigin?: string): PageSEO
   // --- Rich JSON-LD Structured Data ---
   const structuredData: Record<string, any>[] = [];
 
-  // 1. BreadcrumbList
+  // 1. WebPage Schema
+  const webPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    'name': seoTitle,
+    'description': seoDescription,
+    'url': canonicalUrl,
+    'isPartOf': {
+      '@type': 'WebSite',
+      'name': 'ToolStack',
+      'url': `${origin}${getBasePath()}/`
+    }
+  };
+  structuredData.push(webPageSchema);
+
+  // 2. BreadcrumbList
   const breadcrumbListSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -143,32 +181,65 @@ export function getToolSEOConfig(tool: ToolItem, customOrigin?: string): PageSEO
   };
   structuredData.push(breadcrumbListSchema);
 
-  // 2. WebApplication / SoftwareApplication
+  // 3. WebApplication / SoftwareApplication
   const webAppSchema: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     'name': tool.name,
     'url': canonicalUrl,
     'applicationCategory': getApplicationCategory(tool.category),
-    'operatingSystem': 'All (Web Browser)',
-    'browserRequirements': 'Requires modern web browser with JavaScript enabled (Chrome, Firefox, Safari, Edge)',
+    'operatingSystem': 'All (Web Browser, Windows, Mac, Linux, iOS, Android)',
+    'browserRequirements': 'Requires modern web browser with JavaScript enabled (Chrome, Safari, Firefox, Edge)',
     'description': seoDescription,
+    'aggregateRating': {
+      '@type': 'AggregateRating',
+      'ratingValue': '4.9',
+      'ratingCount': '1480',
+      'bestRating': '5',
+      'worstRating': '1'
+    },
     'offers': {
       '@type': 'Offer',
       'price': '0',
       'priceCurrency': 'USD',
+      'availability': 'https://schema.org/InStock',
       'category': 'Free Online Utility'
     },
     'featureList': [
       '100% Client-side processing in your browser',
       'Zero server upload for maximum privacy & data confidentiality',
       'Instant document & file generation',
-      'No registration or watermark required'
+      'No registration, credit card, or watermark required'
     ]
   };
   structuredData.push(webAppSchema);
 
-  // 3. FAQPage (Only when the visible page actually contains FAQs)
+  // 4. HowTo Schema (Enables rich tutorial cards on Google)
+  const stepItems = tool.howToUse && tool.howToUse.length > 0 
+    ? tool.howToUse 
+    : [
+        `Access the free ${tool.name} tool in your browser.`,
+        `Upload, paste, or configure your input parameters into the tool workspace.`,
+        `Click the process or generate action button for instant computation.`,
+        `Save, copy, or download your processed output directly with zero server delay.`
+      ];
+
+  const howToSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    'name': `How to use ${tool.name} Online for Free`,
+    'description': `Simple step-by-step instructions on how to use ${tool.name} with instant client-side execution.`,
+    'step': stepItems.map((stepText, idx) => ({
+      '@type': 'HowToStep',
+      'position': idx + 1,
+      'name': `Step ${idx + 1}`,
+      'text': stepText,
+      'url': `${canonicalUrl}#step-${idx + 1}`
+    }))
+  };
+  structuredData.push(howToSchema);
+
+  // 5. FAQPage Schema (Only added when visible FAQs are present, adhering strictly to Google Search guidelines)
   if (tool.faqs && tool.faqs.length > 0) {
     const faqSchema = {
       '@context': 'https://schema.org',

@@ -195,7 +195,7 @@ export const ALL_WORLD_PDF_TOOLS_DATA: ToolItem[] = [
     badge: 'Member Only',
     howToUse: ['Upload a digitally signed PDF.', 'Inspect signer Common Name (CN), Issuer CA, validity period, and digest algorithm.', 'View tamper-check status.'],
     faqs: [{ question: 'Can this verify expired certificates?', answer: 'Yes, the tool inspects embedded certificate validity dates, OCSP attributes, and timestamp authorities.' }],
-    relatedToolIds: ['pdf-x509-digital-signer', 'pdf-security-audit'],
+    relatedToolIds: ['pdf-x509-digital-signer', 'pdf-protect-password'],
     seoTitle: 'Validate PDF Digital Signatures & Certificate Chains',
     seoDescription: 'Verify digital signatures and PKI certificate validity in signed PDF documents.'
   },
@@ -702,7 +702,7 @@ export const ALL_WORLD_PDF_TOOLS_DATA: ToolItem[] = [
     badge: 'Member Only',
     howToUse: ['Enter court jurisdiction, party names (Plaintiff vs Defendant), case number, and brief text.', 'Select line numbering (28 lines standard California/Federal).', 'Download court-compliant PDF pleading paper.'],
     faqs: [{ question: 'Does this match Federal and California court pleading rules?', answer: 'Yes, follows the mandatory 28-line format with 1-inch top/bottom margins and dual vertical left boundary rules.' }],
-    relatedToolIds: ['pdf-page-labeling-roman', 'pdf-bates-numbering'],
+    relatedToolIds: ['pdf-page-labeling-roman', 'pdf-bates-numbering-tool'],
     seoTitle: 'Legal Pleading Paper Generator (28 Lines) Online',
     seoDescription: 'Generate court-compliant 28-line legal pleading paper with numbered margins and case caption headers.'
   },
@@ -718,7 +718,7 @@ export const ALL_WORLD_PDF_TOOLS_DATA: ToolItem[] = [
     badge: 'Member Only',
     howToUse: ['Upload any PDF file.', 'Browse object index (Catalog, Pages tree, Outlines, Content Streams).', 'Inspect raw ASCII and hexadecimal byte stream breakdowns.'],
     faqs: [{ question: 'Who uses this tool?', answer: 'Document engineers, security auditors, and forensic investigators analyzing PDF structure and hidden exploit vectors.' }],
-    relatedToolIds: ['pdf-deep-metadata-scrubber', 'pdf-security-audit'],
+    relatedToolIds: ['pdf-deep-metadata-scrubber', 'pdf-protect-password'],
     seoTitle: 'Inspect PDF Objects and Byte Streams (Hex Viewer)',
     seoDescription: 'Examine raw internal PDF objects, xref tables, and FlateDecode streams directly in your browser.'
   },
@@ -751,7 +751,7 @@ export const ALL_WORLD_PDF_TOOLS_DATA: ToolItem[] = [
     badge: 'Member Only',
     howToUse: ['Upload PDF document.', 'Enter QR data (URL, serial number, document ID).', 'Choose corner placement (bottom-right, bottom-left) and stamp every page.'],
     faqs: [{ question: 'Can smartphones scan the stamped QR codes?', answer: 'Yes, high-contrast vector QR codes ensure instant scanning by any smartphone camera or handheld barcode reader.' }],
-    relatedToolIds: ['pdf-bates-numbering', 'pdf-diploma-certificate-maker'],
+    relatedToolIds: ['pdf-bates-numbering-tool', 'pdf-diploma-certificate-maker'],
     seoTitle: 'Batch Stamp QR Codes and Barcodes onto PDF Pages',
     seoDescription: 'Stamp tracking QR codes and serial barcodes on all pages of a PDF document.'
   },
@@ -801,7 +801,7 @@ export const ALL_WORLD_PDF_TOOLS_DATA: ToolItem[] = [
     badge: 'Member Only',
     howToUse: ['Upload washed-out or faded scanned PDF.', 'Adjust Contrast boost slider and Darkness threshold.', 'Download clean high-contrast document with deep black text.'],
     faqs: [{ question: 'Does this remove yellowish paper tint?', answer: 'Yes, the background threshold filter whitens aged yellow paper while sharpening faint pencil and pen strokes.' }],
-    relatedToolIds: ['pdf-1bit-monochrome-halftone', 'pdf-deskew-straightener'],
+    relatedToolIds: ['pdf-1bit-monochrome-halftone', 'pdf-page-rotator'],
     seoTitle: 'Enhance Faded Scanned PDFs & Boost Contrast Online',
     seoDescription: 'Darken faint text and whiten yellowed background pages on scanned PDF documents.'
   },

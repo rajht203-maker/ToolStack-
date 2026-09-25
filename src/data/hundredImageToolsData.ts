@@ -62,7 +62,7 @@ export const HUNDRED_IMAGE_TOOLS_DATA: ToolItem[] = [
     popular: true,
     howToUse: ['Upload any .webp file.', 'Choose output format (PNG with transparency or JPG).', 'Download universally compatible image.'],
     faqs: [{ question: 'Why convert WebP back to PNG?', answer: 'Many desktop editors, older software, and printers still do not natively open WebP files.' }],
-    relatedToolIds: ['image-png-to-webp-converter', 'image-svg-to-png-rasterizer', 'image-base64-embedder'],
+    relatedToolIds: ['image-png-to-webp-converter', 'image-svg-to-png-rasterizer', 'image-svg-data-url-converter'],
     seoTitle: 'WebP to PNG Converter Online Free | ToolStack',
     seoDescription: 'Convert WebP images to PNG or JPG online. Make web images compatible with Photoshop, office apps, and printers.'
   },

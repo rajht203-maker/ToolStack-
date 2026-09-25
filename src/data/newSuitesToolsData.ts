@@ -246,7 +246,7 @@ export const NEW_SUITES_TOOLS_DATA: ToolItem[] = [
         answer: 'Correct metadata ensures accurate citations in search engines, e-readers, and academic reference managers.'
       }
     ],
-    relatedToolIds: ['pdf-metadata-stripper', 'seo-meta-tag-generator', 'pdf-text-extractor'],
+    relatedToolIds: ['pdf-metadata-stripper', 'meta-tag-generator', 'pdf-text-extractor'],
     seoTitle: 'PDF Metadata Editor - Edit PDF Properties Online | ToolStack',
     seoDescription: 'Edit PDF Title, Author, Subject, and Keywords online for free. Update PDF document properties in seconds.'
   },
@@ -740,7 +740,7 @@ export const NEW_SUITES_TOOLS_DATA: ToolItem[] = [
         answer: 'It eliminates additional HTTP requests by embedding the graphic directly into your HTML or stylesheet.'
       }
     ],
-    relatedToolIds: ['base64-image-previewer', 'base64-encode-decode', 'svg-optimizer'],
+    relatedToolIds: ['base64-image-previewer', 'base64-encoder', 'svg-optimizer'],
     seoTitle: 'Convert Image to Base64 Data URI Online | ToolStack',
     seoDescription: 'Convert images to Base64 strings and Data URIs online. Copy ready-to-use HTML and CSS embed code.'
   },

@@ -545,7 +545,7 @@ export const TOOLS_DATA: ToolItem[] = [
         answer: 'Space-separated 8-bit bytes (e.g., "01001000 01100101 01101100 01101100 01101111" = Hello).'
       }
     ],
-    relatedToolIds: ['base64-encoder', 'morse-code', 'hex-converter'],
+    relatedToolIds: ['base64-encoder', 'morse-code', 'hex-rgb-hsl-picker'],
     seoTitle: 'Binary to Text & Text to Binary Converter | ToolStack',
     seoDescription: 'Convert text to binary and binary code back to text with this free, fast online binary translator.'
   },
@@ -1683,7 +1683,7 @@ export const TOOLS_DATA: ToolItem[] = [
         answer: 'No! All token parsing and decoding occurs entirely in your browser memory. Your secrets and claims are 100% private.'
       }
     ],
-    relatedToolIds: ['base64-converter', 'curl-converter', 'hash-generator'],
+    relatedToolIds: ['base64-encoder', 'curl-converter', 'hash-generator'],
     seoTitle: 'JWT Debugger - Decode and Inspect JSON Web Tokens | ToolStack',
     seoDescription: 'Decode and inspect JWT header and payload claims with expiration checking. Fast, client-side, and private.'
   },
@@ -1708,7 +1708,7 @@ export const TOOLS_DATA: ToolItem[] = [
         answer: 'Standard crontab format is: Minute (0-59), Hour (0-23), Day of Month (1-31), Month (1-12), and Day of Week (0-6).'
       }
     ],
-    relatedToolIds: ['epoch-converter', 'curl-converter'],
+    relatedToolIds: ['timestamp-converter', 'curl-converter'],
     seoTitle: 'Cron Expression Parser & Human Translator | ToolStack',
     seoDescription: 'Translate cron schedule expressions into readable human language. Understand crontab schedules instantly.'
   },
@@ -1836,7 +1836,7 @@ export const TOOLS_DATA: ToolItem[] = [
         answer: 'Supports headings, bold/italic text, blockquotes, inline code, ordered/unordered lists, and paragraph formatting.'
       }
     ],
-    relatedToolIds: ['word-counter', 'case-converter', 'text-diff'],
+    relatedToolIds: ['word-counter', 'case-converter', 'diff-checker'],
     seoTitle: 'Markdown Live Previewer & HTML Exporter | ToolStack',
     seoDescription: 'Edit Markdown with live side-by-side preview. Convert Markdown to clean HTML and copy in seconds.'
   },
@@ -1862,7 +1862,7 @@ export const TOOLS_DATA: ToolItem[] = [
         answer: 'Never! These are static QR codes that encode your text or URL directly into the matrix, so they function forever.'
       }
     ],
-    relatedToolIds: ['qr-generator', 'og-previewer', 'social-bio-generator'],
+    relatedToolIds: ['qr-generator', 'og-previewer'],
     seoTitle: 'Stylized QR Code Generator with Custom Colors | ToolStack',
     seoDescription: 'Create custom branded QR codes with custom colors and instant PNG download. 100% free and permanent.'
   },
@@ -1990,7 +1990,7 @@ export const TOOLS_DATA: ToolItem[] = [
         answer: 'Calculated using standard 2,080 annual working hours per employee multiplied by attendees count divided by 3,600 seconds.'
       }
     ],
-    relatedToolIds: ['freelance-rate-calculator', 'pomodoro-timer', 'stopwatch'],
+    relatedToolIds: ['freelance-rate-calculator', 'pomodoro-timer'],
     seoTitle: 'Live Meeting Cost Clock - Real-Time Burn Rate Tracker | ToolStack',
     seoDescription: 'Track the real-time financial burn rate of corporate meetings second-by-second based on headcount and salaries.'
   },
@@ -2320,7 +2320,7 @@ export const TOOLS_DATA: ToolItem[] = [
         answer: 'Based on 52 weeks multiplied by weekly work hours (default 2,080 hours per year).'
       }
     ],
-    relatedToolIds: ['freelance-rate-calculator', 'currency-converter', 'tax-calculator'],
+    relatedToolIds: ['freelance-rate-calculator', 'currency-converter', 'sales-tax-calculator'],
     seoTitle: 'Salary to Hourly & Paycheck Calculator - Net Take-Home | ToolStack',
     seoDescription: 'Convert annual salary to hourly, bi-weekly, and net monthly take-home income estimates.'
   },
@@ -3694,12 +3694,54 @@ export function getToolsByCategory(catId: string): ToolItem[] {
 }
 
 export function getRelatedTools(tool: ToolItem): ToolItem[] {
-  const directMatches = TOOLS_DATA.filter(t => t.id !== tool.id && tool.relatedToolIds && tool.relatedToolIds.includes(t.id));
-  if (directMatches.length >= 3) {
+  const legacyAliases: Record<string, string> = {
+    'hex-converter': 'hex-rgb-hsl-picker',
+    'base64-converter': 'base64-encoder',
+    'base64-encode-decode': 'base64-encoder',
+    'epoch-converter': 'timestamp-converter',
+    'text-diff': 'diff-checker',
+    'social-bio-generator': 'qr-generator',
+    'stopwatch': 'pomodoro-timer',
+    'tax-calculator': 'sales-tax-calculator',
+    'seo-meta-tag-generator': 'meta-tag-generator',
+    'pdf-page-resizer': 'pdf-scale-zoom-multiplier',
+    'image-base64-embedder': 'image-svg-data-url-converter',
+    'pdf-security-audit': 'pdf-protect-password',
+    'pdf-protect': 'pdf-protect-password',
+    'pdf-bates-numbering': 'pdf-bates-numbering-tool',
+    'pdf-deskew-straightener': 'pdf-page-rotator',
+    'pdf-rotate': 'pdf-page-rotator'
+  };
+
+  const directMatches = (tool.relatedToolIds || [])
+    .map(rawId => {
+      const mappedId = legacyAliases[rawId] || rawId;
+      return TOOLS_DATA.find(t => t.id === mappedId || t.slug === mappedId);
+    })
+    .filter((t): t is ToolItem => Boolean(t) && t.id !== tool.id);
+
+  if (directMatches.length >= 4) {
     return directMatches.slice(0, 6);
   }
-  const fallbackMatches = TOOLS_DATA.filter(t => t.id !== tool.id && t.category === tool.category && (!tool.relatedToolIds || !tool.relatedToolIds.includes(t.id)));
-  return [...directMatches, ...fallbackMatches].slice(0, 6);
+
+  // Find other tools in the same category prioritized by shared tags & popularity
+  const toolTags = new Set((tool.tags || []).map(t => t.toLowerCase()));
+  const categoryCandidates = TOOLS_DATA.filter(t => 
+    t.id !== tool.id && 
+    !directMatches.some(dm => dm.id === t.id) &&
+    t.category === tool.category
+  );
+
+  const scored = categoryCandidates.map(t => {
+    let score = 0;
+    if (t.popular || t.trending) score += 2;
+    for (const tag of (t.tags || [])) {
+      if (toolTags.has(tag.toLowerCase())) score += 3;
+    }
+    return { tool: t, score };
+  }).sort((a, b) => b.score - a.score);
+
+  return [...directMatches, ...scored.map(s => s.tool)].slice(0, 6);
 }
 
 export const PLATFORM_STATS = {

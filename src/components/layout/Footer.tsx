@@ -48,36 +48,64 @@ export const Footer: React.FC<FooterProps> = ({
             </h4>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li>
-                <button
-                  onClick={() => onSelectCategory('pdf')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/tools/pdf-merge"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', '/tools/pdf-merge');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   PDF Merge & Split
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onSelectCategory('image')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/tools/image-compressor"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', '/tools/image-compressor');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   Image Compression & Resizing
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onSelectCategory('image')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/tools/qr-generator"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', '/tools/qr-generator');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   Favicon & QR Code Generator
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onSelectCategory('text')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/tools/word-counter"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', '/tools/word-counter');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   Word Counter & Case Converter
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -89,36 +117,64 @@ export const Footer: React.FC<FooterProps> = ({
             </h4>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li>
-                <button
-                  onClick={() => onSelectCategory('developer')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/tools/json-formatter"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', '/tools/json-formatter');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   JSON Formatter & Validator
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onSelectCategory('developer')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/tools/base64-encode"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', '/tools/base64-encode');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   Base64 & URL Encoder
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onSelectCategory('calculator')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/calculators/loan-emi"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', '/calculators/loan-emi');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   Loan EMI & Compound Interest
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onSelectCategory('calculator')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/calculators/gst-calculator"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', '/calculators/gst-calculator');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   GST & Sales Tax Calculator
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -130,28 +186,48 @@ export const Footer: React.FC<FooterProps> = ({
             </h4>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li>
-                <button
-                  onClick={() => onSelectCategory('security')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/tools/password-generator"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', '/tools/password-generator');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   Cryptographic Password Generator
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onSelectCategory('security')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/tools/hash-sha256"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', '/tools/hash-sha256');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   SHA-256 Hash Digest
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onSelectCategory('seo')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                <a
+                  href="/category/seo"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      onSelectCategory('seo');
+                    }
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
                   Robots.txt & Sitemap Generator
-                </button>
+                </a>
               </li>
               <li>
                 <a

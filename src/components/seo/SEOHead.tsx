@@ -46,8 +46,10 @@ export const SEOHead: React.FC<SEOHeadProps> = ({ config }) => {
       updateMetaTag('name', 'keywords', config.keywords.join(', '));
     }
 
-    // 3. Robots meta tag (indexable vs noindex)
-    const robotsContent = config.indexable ? 'index, follow' : 'noindex, nofollow';
+    // 3. Robots meta tag (indexable vs noindex) with Google snippet directives
+    const robotsContent = config.indexable 
+      ? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' 
+      : 'noindex, nofollow';
     updateMetaTag('name', 'robots', robotsContent);
     updateMetaTag('name', 'googlebot', robotsContent);
 

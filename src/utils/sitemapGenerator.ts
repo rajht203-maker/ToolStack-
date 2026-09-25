@@ -17,34 +17,35 @@ export function getAllSitemapURLs(customOrigin?: string): SitemapURLItem[] {
   const today = new Date().toISOString().split('T')[0];
 
   const urls: SitemapURLItem[] = [];
+  const seenLocs = new Set<string>();
+
+  const addUrl = (loc: string, changefreq: SitemapURLItem['changefreq'], priority: string) => {
+    // Ensure clean canonical URL with no trailing slash except root
+    const cleanLoc = loc.replace(/\/+$/, '') || `${origin}/`;
+    const finalLoc = cleanLoc === origin ? `${origin}/` : cleanLoc;
+    if (!seenLocs.has(finalLoc)) {
+      seenLocs.add(finalLoc);
+      urls.push({
+        loc: finalLoc,
+        lastmod: today,
+        changefreq,
+        priority
+      });
+    }
+  };
 
   // 1. Homepage
-  urls.push({
-    loc: `${origin}${basePath}/`,
-    lastmod: today,
-    changefreq: 'daily',
-    priority: '1.0'
-  });
+  addUrl(`${origin}${basePath}/`, 'daily', '1.0');
 
   // 2. Legal / Compliance Pages (Privacy Policy)
-  urls.push({
-    loc: `${origin}${basePath}/privacy-policy`,
-    lastmod: today,
-    changefreq: 'monthly',
-    priority: '0.7'
-  });
+  addUrl(`${origin}${basePath}/privacy-policy`, 'monthly', '0.7');
 
   // 3. Category Pages
   for (const cat of CATEGORIES) {
-    urls.push({
-      loc: `${origin}${basePath}/category/${cat.id}`,
-      lastmod: today,
-      changefreq: 'weekly',
-      priority: '0.8'
-    });
+    addUrl(`${origin}${basePath}/category/${cat.id}`, 'weekly', '0.8');
   }
 
-  // 3. Individual Tool Pages (All 1,200+ public tools)
+  // 4. Individual Tool Pages (All 1,200+ public tools)
   for (const tool of TOOLS_DATA) {
     const subpath = tool.category === 'calculator' 
       ? `/calculators/${tool.slug}` 
@@ -54,12 +55,7 @@ export function getAllSitemapURLs(customOrigin?: string): SitemapURLItem[] {
     const isHighPriority = tool.popular || tool.trending || tool.badge === 'Popular';
     const priority = isHighPriority ? '0.9' : '0.8';
 
-    urls.push({
-      loc: `${origin}${basePath}${subpath}`,
-      lastmod: today,
-      changefreq: 'weekly',
-      priority
-    });
+    addUrl(`${origin}${basePath}${subpath}`, 'weekly', priority);
   }
 
   return urls;

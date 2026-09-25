@@ -120,7 +120,7 @@ export const HUNDRED_PDF_TOOLS_DATA: ToolItem[] = [
     popular: true,
     howToUse: ['Upload your PDF.', 'Adjust crop margin inset slider (top, bottom, left, right).', 'Download tightly framed PDF.'],
     faqs: [{ question: 'Will this make documents easier to read on Kindle or tablets?', answer: 'Yes! Removing empty white gutters maximizes text size on small screens.' }],
-    relatedToolIds: ['pdf-margin-adjuster', 'pdf-page-resizer', 'pdf-scale-zoom-multiplier'],
+    relatedToolIds: ['pdf-margin-adjuster', 'pdf-scale-zoom-multiplier'],
     seoTitle: 'Crop PDF Margins Online Free - Trim White Borders',
     seoDescription: 'Trim whitespace and scanner borders from PDF pages. Optimize documents for tablet, Kindle, and mobile reading.'
   },
@@ -362,7 +362,7 @@ export const HUNDRED_PDF_TOOLS_DATA: ToolItem[] = [
     tags: ['pdf bleed', 'crop marks', 'printer bleed box', 'slug box', 'commercial printing', 'trim marks'],
     howToUse: ['Upload print artwork PDF.', 'Select bleed width (standard 3mm or 0.125 in).', 'Download print-ready PDF with corner crop marks and registration crosses.'],
     faqs: [{ question: 'Why do commercial print shops ask for bleed?', answer: 'Bleed ensures that when cutting stacks of paper, slight blade shifts will never leave accidental white borders on page edges.' }],
-    relatedToolIds: ['pdf-page-resizer', 'pdf-margin-adjuster', 'pdf-poster-tile-splitter'],
+    relatedToolIds: ['pdf-scale-zoom-multiplier', 'pdf-margin-adjuster', 'pdf-poster-tile-splitter'],
     seoTitle: 'Add Bleed & Crop Marks to PDF Online - Print Ready Helper',
     seoDescription: 'Add 3mm bleed margin and printer crop marks to PDF files online. Perfect for commercial press printing.'
   },
@@ -392,7 +392,7 @@ export const HUNDRED_PDF_TOOLS_DATA: ToolItem[] = [
     badge: 'Popular',
     howToUse: ['Upload high-res poster or artwork PDF.', 'Choose grid layout (2×2 pages, 3×3 pages, or 4×4 pages).', 'Download multi-page tiled PDF ready to print and assemble.'],
     faqs: [{ question: 'Are overlap margins provided for taping?', answer: 'Yes, each tile includes a 0.5-inch overlap guideline for seamless alignment.' }],
-    relatedToolIds: ['pdf-nup-multi-page-grid', 'pdf-page-resizer', 'pdf-crop-white-margins'],
+    relatedToolIds: ['pdf-nup-multi-page-grid', 'pdf-scale-zoom-multiplier', 'pdf-crop-white-margins'],
     seoTitle: 'Print Large Posters on Standard A4/Letter Paper - PDF Tile Splitter',
     seoDescription: 'Split large posters into multiple A4 or US Letter pages. Print on home printer and tape together into a giant wall poster.'
   },

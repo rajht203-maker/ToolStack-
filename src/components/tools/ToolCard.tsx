@@ -59,10 +59,20 @@ export const ToolCard: React.FC<ToolCardProps> = ({
       ? 'p-4 min-h-[145px]'
       : 'p-5 sm:p-6 min-h-[175px]';
 
+  const toolSubpath = tool.category === 'calculator' 
+    ? `/calculators/${tool.slug}` 
+    : `/tools/${tool.slug}`;
+
   return (
-    <div
-      onClick={() => onSelect(tool)}
-      className={`bg-white dark:bg-slate-900 ${densityPadding} ${cornerRadiusClass} shadow-xs border border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all group cursor-pointer flex flex-col justify-between relative hover:shadow-md`}
+    <a
+      href={toolSubpath}
+      onClick={(e) => {
+        if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+          e.preventDefault();
+          onSelect(tool);
+        }
+      }}
+      className={`bg-white dark:bg-slate-900 ${densityPadding} ${cornerRadiusClass} shadow-xs border border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all group cursor-pointer flex flex-col justify-between relative hover:shadow-md block no-underline text-inherit`}
       style={{
         fontFamily:
           themeSettings.fontFamily === 'mono'
@@ -153,7 +163,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
           <ArrowRight className="w-3.5 h-3.5" />
         </span>
       </div>
-    </div>
+    </a>
   );
 };
 

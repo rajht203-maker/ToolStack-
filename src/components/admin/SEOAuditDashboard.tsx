@@ -40,7 +40,7 @@ export const SEOAuditDashboard: React.FC<SEOAuditDashboardProps> = ({ onSelectTo
   // Run comprehensive SEO audit across all tools
   const auditResults = useMemo(() => {
     const sitemapUrls = new Set(getAllSitemapURLs(siteOrigin).map(u => u.loc));
-    const allToolIds = new Set(TOOLS_DATA.map(t => t.id));
+    const allToolIdentifiers = new Set([...TOOLS_DATA.map(t => t.id), ...TOOLS_DATA.map(t => t.slug)]);
     const slugMap = new Map<string, number>();
 
     for (const tool of TOOLS_DATA) {
@@ -81,7 +81,7 @@ export const SEOAuditDashboard: React.FC<SEOAuditDashboardProps> = ({ onSelectTo
       }
 
       // 6. Broken Internal Links (related tools that don't exist)
-      const brokenRelated = (tool.relatedToolIds || []).filter(id => !allToolIds.has(id));
+      const brokenRelated = (tool.relatedToolIds || []).filter(id => !allToolIdentifiers.has(id));
       if (brokenRelated.length > 0) {
         issues.push(`Broken Related Links (${brokenRelated.join(', ')})`);
       }
