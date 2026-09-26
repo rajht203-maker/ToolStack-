@@ -82,7 +82,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({ config }) => {
         const scriptElement = document.createElement('script');
         scriptElement.type = 'application/ld+json';
         scriptElement.setAttribute('data-schema', 'toolstack-seo');
-        scriptElement.textContent = JSON.stringify(schemaData, null, 2);
+        scriptElement.textContent = JSON.stringify(schemaData, null, 2).replace(/</g, '\\u003c');
         document.head.appendChild(scriptElement);
       });
     }

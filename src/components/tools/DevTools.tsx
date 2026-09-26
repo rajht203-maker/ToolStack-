@@ -291,6 +291,12 @@ export const DevTools: React.FC<DevToolsProps> = ({ tool, onSuccess }) => {
     setHeaderLoading(true);
     setError(null);
     try {
+      const parsed = new URL(headerTargetUrl);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        setError('Only HTTP and HTTPS URLs are permitted.');
+        setHeaderLoading(false);
+        return;
+      }
       const res = await fetch(headerTargetUrl, { method: 'HEAD' });
       const hdrs: Record<string, string> = {};
       res.headers.forEach((val, key) => {

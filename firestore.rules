@@ -12,7 +12,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == 'rajht203@gmail.com' ||
+        (request.auth.token.email == 'rajht203@gmail.com' && request.auth.token.email_verified == true) ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
@@ -45,7 +45,7 @@ service cloud.firestore {
       allow create: if (isOwner(userId) &&
         request.resource.data.userId == userId &&
         request.resource.data.email is string &&
-        (!('role' in request.resource.data) || request.resource.data.role == 'user' || (request.resource.data.role == 'admin' && request.auth.token.email == 'rajht203@gmail.com'))) || isAdmin();
+        (!('role' in request.resource.data) || request.resource.data.role == 'user' || (request.resource.data.role == 'admin' && request.auth.token.email == 'rajht203@gmail.com' && request.auth.token.email_verified == true))) || isAdmin();
       allow update: if (isOwner(userId) &&
         request.resource.data.userId == userId &&
         (!('role' in request.resource.data) || request.resource.data.role == resource.data.role || isAdmin())) || isAdmin();

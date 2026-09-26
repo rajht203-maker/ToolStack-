@@ -13,6 +13,7 @@ import {
   Eye
 } from 'lucide-react';
 import { ToolItem } from '../../types';
+import { sanitizeSvg, escapeHtml } from '../../utils/security';
 
 interface ModernMediaToolsProps {
   tool: ToolItem;
@@ -82,11 +83,9 @@ ToolStack is a **100% client-side** utilities powerhouse.
     const raw = svgInput.trim();
     if (!raw) return { svg: '', originalBytes: 0, cleanBytes: 0, savings: 0 };
 
-    // Strip comments, metadata, extra whitespace, doctypes
-    let cleaned = raw
-      .replace(/<!--[\s\S]*?-->/g, '')
-      .replace(/<\?xml[\s\S]*?\?>/i, '')
-      .replace(/<!DOCTYPE[\s\S]*?>/i, '')
+    // Strip comments, metadata, extra whitespace, doctypes, and dangerous tags/handlers
+    const sanitized = sanitizeSvg(raw);
+    let cleaned = sanitized
       .replace(/\s+id="[^"]*"/gi, '')
       .replace(/\s+data-name="[^"]*"/gi, '')
       .replace(/\s+xmlns:xlink="[^"]*"/gi, '')
@@ -105,15 +104,18 @@ ToolStack is a **100% client-side** utilities powerhouse.
     };
   }, [svgInput]);
 
-  // --- Simple Markdown to HTML Parser ---
+  // --- Secure Markdown to HTML Parser ---
   const renderedHtml = useMemo(() => {
-    let html = markdownInput
+    // Escape raw HTML entities first to prevent XSS injection
+    const safeSource = escapeHtml(markdownInput);
+
+    const html = safeSource
       .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-slate-900 dark:text-white mt-3 mb-1">$1</h3>')
       .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-2">$1</h2>')
       .replace(/^# (.*$)/gim, '<h1 class="text-xl font-black text-slate-900 dark:text-white mb-3">$1</h1>')
       .replace(/^\> (.*$)/gim, '<blockquote class="border-l-4 border-indigo-500 pl-3 py-1 my-2 italic text-slate-600 dark:text-slate-300 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-r-lg">$1</blockquote>')
-      .replace(/\*\*(.*)\*\*/gim, '<strong class="font-bold text-indigo-600 dark:text-indigo-400">$1</strong>')
-      .replace(/\*(.*)\*/gim, '<em class="italic">$1</em>')
+      .replace(/\*\*(.*?)\*\*/gim, '<strong class="font-bold text-indigo-600 dark:text-indigo-400">$1</strong>')
+      .replace(/\*(.*?)\*/gim, '<em class="italic">$1</em>')
       .replace(/`([^`]+)`/gim, '<code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 font-mono text-xs">$1</code>')
       .replace(/\n\n/gim, '</p><p class="mb-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">')
       .replace(/\n/gim, '<br />');
@@ -274,7 +276,7 @@ ToolStack is a **100% client-side** utilities powerhouse.
               <a
                 href={qrImageUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 download="qrcode.png"
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >

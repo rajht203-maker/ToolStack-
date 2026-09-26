@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const snap = await getDoc(userDocRef);
           
           const cleanEmail = (user.email || '').trim().toLowerCase();
-          const isBootstrapAdmin = cleanEmail === 'rajht203@gmail.com';
+          const isBootstrapAdmin = cleanEmail === 'rajht203@gmail.com' && Boolean(user.emailVerified);
           const defaultRole: 'user' | 'admin' = isBootstrapAdmin ? 'admin' : 'user';
 
           if (!snap.exists()) {
@@ -145,7 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: cleanEmail,
               displayName: user.displayName || cleanEmail.split('@')[0] || 'User',
               photoURL: user.photoURL || undefined,
-              role: cleanEmail === 'rajht203@gmail.com' ? 'admin' : 'user',
+              role: (cleanEmail === 'rajht203@gmail.com' && Boolean(user.emailVerified)) ? 'admin' : 'user',
               status: 'active',
               createdAt: new Date().toISOString()
             });

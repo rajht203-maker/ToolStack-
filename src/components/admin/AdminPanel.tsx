@@ -106,7 +106,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
   const userCleanEmail = (user?.email || '').trim().toLowerCase();
   const isAuthorized = Boolean(
     user && 
-    (userCleanEmail === 'rajht203@gmail.com' || (profile?.role === 'admin' && profile?.status !== 'suspended')) &&
+    ((userCleanEmail === 'rajht203@gmail.com' && user.emailVerified) || (profile?.role === 'admin' && profile?.status !== 'suspended')) &&
     isAdmin
   );
 

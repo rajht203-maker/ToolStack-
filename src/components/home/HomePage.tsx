@@ -7,6 +7,7 @@ import { InFeedAd } from '../ads/InFeedAd';
 import { IconRenderer } from '../common/IconRenderer';
 import { ProblemSolverBar } from '../common/ProblemSolverBar';
 import { useTheme } from '../../context/ThemeContext';
+import { HOMEPAGE_FAQS } from '../../utils/seoConfig';
 import { 
   getMostPopularTools, 
   recordToolClick, 
@@ -28,7 +29,9 @@ import {
   Compass,
   Palette,
   RotateCcw,
-  TrendingUp
+  TrendingUp,
+  FolderTree,
+  ChevronRight
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -130,14 +133,46 @@ export const HomePage: React.FC<HomePageProps> = ({
             <span>{TOOLS_DATA.length}+ Working Utilities • Local In-Browser Processing</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter leading-tight text-slate-900 dark:text-white">
-            Define your problem.<br />
-            <span className="text-indigo-600 dark:text-indigo-400">We find the exact tool.</span>
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-slate-900 dark:text-white">
+            ToolStack – Free Online Web Tools &amp; Utilities
           </h1>
 
-          <p className="text-sm sm:text-lg text-slate-500 dark:text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
-            {TOOLS_DATA.length}+ high-traffic everyday utilities, developer tools, and members-only PDF & Image suites. Simply describe what you need to solve or search directly.
+          <p className="text-sm sm:text-base lg:text-lg text-slate-500 dark:text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
+            Fast, 100% private in-browser utilities. Merge PDFs, compress images, calculate loan EMIs, format JSON, generate QR codes, and convert files with zero server uploads.
           </p>
+
+          {/* Quick Popular Tool Shortcuts (Internal Crawlable Links) */}
+          <div className="pt-1 flex items-center justify-center gap-2 flex-wrap text-xs">
+            <span className="text-slate-400 dark:text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+              Popular Tools:
+            </span>
+            {[
+              { name: 'PDF Merge', slug: 'pdf-merge', category: 'pdf' },
+              { name: 'Image Compressor', slug: 'image-compressor', category: 'image' },
+              { name: 'Loan EMI', slug: 'loan-emi', category: 'calculator' },
+              { name: 'QR Code Generator', slug: 'qr-generator', category: 'image' },
+              { name: 'JSON Formatter', slug: 'json-formatter', category: 'developer' },
+              { name: 'Word Counter', slug: 'word-counter', category: 'text' }
+            ].map((t) => {
+              const href = t.category === 'calculator' ? `/calculators/${t.slug}` : `/tools/${t.slug}`;
+              return (
+                <a
+                  key={t.slug}
+                  href={href}
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      const found = TOOLS_DATA.find(x => x.slug === t.slug);
+                      if (found) handleToolSelection(found);
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition-colors border border-slate-200/60 dark:border-slate-700/60"
+                >
+                  {t.name}
+                </a>
+              );
+            })}
+          </div>
 
           {/* Search Mode Switcher Tabs */}
           <div className="flex items-center justify-center gap-2 pt-2">
@@ -477,6 +512,73 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Category Directory (Internal Linking & Natural Navigation) */}
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-4">
+        <div className="flex items-center gap-2 pb-1">
+          <FolderTree className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+            Explore All Tool Categories
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {CATEGORIES.map((cat) => {
+            const count = TOOLS_DATA.filter(t => t.category === cat.id).length;
+            return (
+              <a
+                key={cat.id}
+                href={`/category/${cat.id}`}
+                onClick={(e) => {
+                  if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                    e.preventDefault();
+                    onSelectCategory(cat.id);
+                  }
+                }}
+                className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group flex flex-col justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <IconRenderer name={cat.icon} className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      {cat.name}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      {count} utilities
+                    </p>
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Visible Frequently Asked Questions (Matches FAQPage JSON-LD Schema) */}
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-5">
+        <div className="flex items-center gap-2">
+          <HelpCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+            Frequently Asked Questions About ToolStack
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {HOMEPAGE_FAQS.map((faq, idx) => (
+            <div
+              key={idx}
+              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs"
+            >
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                {faq.question}
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                {faq.answer}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
     </div>

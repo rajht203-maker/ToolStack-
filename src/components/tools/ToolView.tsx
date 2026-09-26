@@ -36,8 +36,137 @@ import {
   Cpu,
   FileCheck,
   Layers,
-  Info
+  Info,
+  Award,
+  Lightbulb,
+  CheckCircle2
 } from 'lucide-react';
+
+function getToolKeyBenefits(tool: ToolItem) {
+  const common = [
+    {
+      title: '100% Client-Side Privacy',
+      desc: 'All processing takes place in your local browser memory. No files, inputs, or sensitive data are ever uploaded to remote servers.'
+    },
+    {
+      title: 'Zero Subscriptions & Watermarks',
+      desc: 'Completely free for personal and commercial projects with no trial limits, recurring fees, or branded watermarks.'
+    },
+    {
+      title: 'Instant Hardware Acceleration',
+      desc: 'Powered by native WebAssembly, Web Workers, and HTML5 Canvas for near-instant rendering without network latency.'
+    }
+  ];
+
+  if (tool.category === 'pdf') {
+    return [
+      ...common.slice(0, 2),
+      {
+        title: 'Preserves Original Document Fidelity',
+        desc: 'Maintains vector fonts, sharp images, formatting, and layout geometry without raster degradation.'
+      }
+    ];
+  } else if (tool.category === 'image') {
+    return [
+      ...common.slice(0, 2),
+      {
+        title: 'Lossless & Near-Lossless Optimization',
+        desc: 'Advanced compression algorithms preserve visual clarity while dramatically reducing file sizes for fast web delivery.'
+      }
+    ];
+  } else if (tool.category === 'calculator' || tool.category === 'converter') {
+    return [
+      ...common.slice(0, 2),
+      {
+        title: 'High-Precision Math Verification',
+        desc: 'Uses verified mathematical algorithms and IEEE-754 standards for reliable financial, scientific, and engineering outputs.'
+      }
+    ];
+  }
+  return common;
+}
+
+function getToolPracticalExamples(tool: ToolItem) {
+  const cat = tool.category;
+  if (cat === 'pdf') {
+    return [
+      {
+        title: 'Business & Office Reports',
+        detail: `Use ${tool.name} to prepare clean, professional PDF documentation for client deliverables, quarterly reviews, and internal archives.`
+      },
+      {
+        title: 'Job Applications & Academic Portfolios',
+        detail: `Format resumes, academic transcripts, and recommendation letters to meet strict portal attachment requirements.`
+      },
+      {
+        title: 'Legal & Compliance Filing',
+        detail: `Process contracts, signed agreements, and disclosures securely without breaching client confidentiality.`
+      }
+    ];
+  }
+  if (cat === 'image') {
+    return [
+      {
+        title: 'Website & Core Web Vitals Optimization',
+        detail: `Prepare lightweight graphics that boost page speed, improve Google Lighthouse scores, and reduce mobile data consumption.`
+      },
+      {
+        title: 'Social Media & E-Commerce Asset Creation',
+        detail: `Format product photos, social banners, and avatars to the exact dimension standards required by major platforms.`
+      },
+      {
+        title: 'Marketing Campaigns & Print Collateral',
+        detail: `Generate high-contrast visuals, scan-ready QR codes, and crisp promotional badges for physical or digital distribution.`
+      }
+    ];
+  }
+  if (cat === 'calculator' || cat === 'converter') {
+    return [
+      {
+        title: 'Personal Finance & Budgeting',
+        detail: `Accurately plan your monthly obligations, interest costs, and repayment timelines with transparent breakdowns.`
+      },
+      {
+        title: 'Commercial Invoicing & Taxation',
+        detail: `Calculate net payouts, tax liabilities, and discount structures before sending invoices or approving estimates.`
+      },
+      {
+        title: 'Academic & Professional Calculations',
+        detail: `Convert units or compute compound formulas instantly with zero rounding errors or hidden formulas.`
+      }
+    ];
+  }
+  if (cat === 'developer' || cat === 'security') {
+    return [
+      {
+        title: 'API Development & Debugging',
+        detail: `Inspect, format, or validate payloads and tokens in real time during frontend or backend development cycles.`
+      },
+      {
+        title: 'Data Encoding & Safe Storage',
+        detail: `Generate cryptographic hashes, secret keys, or base64 strings securely without exposing keys over HTTP.`
+      },
+      {
+        title: 'DevOps & System Configuration',
+        detail: `Validate cron intervals, configuration strings, and security policies before deploying to staging or production.`
+      }
+    ];
+  }
+  return [
+    {
+      title: 'Content Writing & Publishing',
+      detail: `Ensure your text complies with word limits, readability standards, and character quotas for blogs and social posts.`
+    },
+    {
+      title: 'Search Engine Optimization',
+      detail: `Verify search snippet lengths and meta tags to improve click-through rates on search engine result pages.`
+    },
+    {
+      title: 'Data Cleaning & Formatting',
+      detail: `Quickly clean, format, and organize unorganized text blocks before sharing or importing into databases.`
+    }
+  ];
+}
 
 interface ToolViewProps {
   tool: ToolItem;
@@ -639,6 +768,55 @@ export const ToolView: React.FC<ToolViewProps> = ({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Key Benefits & Practical Everyday Examples */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Core Benefits */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <Award className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <h2 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
+              Key Benefits of {tool.name}
+            </h2>
+          </div>
+          <div className="space-y-3.5">
+            {getToolKeyBenefits(tool).map((benefit, idx) => (
+              <div key={idx} className="space-y-1 text-xs">
+                <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>{benefit.title}</span>
+                </div>
+                <p className="text-slate-500 dark:text-slate-400 pl-5 leading-relaxed font-medium">
+                  {benefit.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Practical Real-World Examples */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <Lightbulb className="w-4 h-4 text-amber-500" />
+            <h2 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
+              Practical Real-World Use Cases
+            </h2>
+          </div>
+          <div className="space-y-3.5">
+            {getToolPracticalExamples(tool).map((example, idx) => (
+              <div key={idx} className="space-y-1 text-xs">
+                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                  <span>{example.title}</span>
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 pl-3 leading-relaxed font-medium">
+                  {example.detail}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Tool Technical Specifications & Overview for Search Engines & Users */}

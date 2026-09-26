@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ToolItem } from '../../types';
+import { escapeHtml, sanitizeUrl } from '../../utils/security';
 import { 
   Copy, 
   Check, 
@@ -366,20 +367,29 @@ These Terms shall be governed and construed in accordance with the laws of **${t
   const [sigAvatar, setSigAvatar] = useState('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80');
 
   const emailSignatureHtml = useMemo(() => {
+    const safeName = escapeHtml(sigName);
+    const safeTitle = escapeHtml(sigTitle);
+    const safeCompany = escapeHtml(sigCompany);
+    const safePhone = escapeHtml(sigPhone);
+    const safeEmail = escapeHtml(sigEmail);
+    const safeWebsite = sanitizeUrl(sigWebsite, ['http:', 'https:']);
+    const safeAvatar = sanitizeUrl(sigAvatar, ['http:', 'https:', 'data:']);
+    const displayWebsite = escapeHtml(sigWebsite.replace(/^https?:\/\//, ''));
+
     return `<table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, sans-serif; font-size: 14px; line-height: 1.4; color: #1E293B;">
   <tr>
     <td style="vertical-align: middle; padding-right: 18px; border-right: 2px solid #6366F1;">
-      <img src="${sigAvatar}" alt="${sigName}" width="64" height="64" style="border-radius: 50%; display: block; object-fit: cover;" />
+      <img src="${safeAvatar}" alt="${safeName}" width="64" height="64" style="border-radius: 50%; display: block; object-fit: cover;" />
     </td>
     <td style="padding-left: 18px; vertical-align: middle;">
-      <div style="font-size: 16px; font-weight: bold; color: #0F172A;">${sigName}</div>
-      <div style="font-size: 13px; color: #6366F1; font-weight: 600;">${sigTitle} · ${sigCompany}</div>
+      <div style="font-size: 16px; font-weight: bold; color: #0F172A;">${safeName}</div>
+      <div style="font-size: 13px; color: #6366F1; font-weight: 600;">${safeTitle} · ${safeCompany}</div>
       <div style="font-size: 12px; color: #64748B; margin-top: 6px;">
-        <span>📞 ${sigPhone}</span> &nbsp;|&nbsp; 
-        <a href="mailto:${sigEmail}" style="color: #6366F1; text-decoration: none;">${sigEmail}</a>
+        <span>📞 ${safePhone}</span> &nbsp;|&nbsp; 
+        <a href="mailto:${safeEmail}" style="color: #6366F1; text-decoration: none;">${safeEmail}</a>
       </div>
       <div style="font-size: 12px; margin-top: 2px;">
-        <a href="${sigWebsite}" style="color: #0F172A; text-decoration: none; font-weight: bold;">${sigWebsite.replace(/^https?:\/\//, '')}</a>
+        <a href="${safeWebsite}" target="_blank" rel="noopener noreferrer" style="color: #0F172A; text-decoration: none; font-weight: bold;">${displayWebsite}</a>
       </div>
     </td>
   </tr>

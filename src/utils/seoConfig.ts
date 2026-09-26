@@ -184,20 +184,14 @@ export function getToolSEOConfig(tool: ToolItem, customOrigin?: string): PageSEO
   // 3. WebApplication / SoftwareApplication
   const webAppSchema: Record<string, any> = {
     '@context': 'https://schema.org',
-    '@type': 'WebApplication',
+    '@type': ['WebApplication', 'SoftwareApplication'],
     'name': tool.name,
     'url': canonicalUrl,
     'applicationCategory': getApplicationCategory(tool.category),
     'operatingSystem': 'All (Web Browser, Windows, Mac, Linux, iOS, Android)',
     'browserRequirements': 'Requires modern web browser with JavaScript enabled (Chrome, Safari, Firefox, Edge)',
     'description': seoDescription,
-    'aggregateRating': {
-      '@type': 'AggregateRating',
-      'ratingValue': '4.9',
-      'ratingCount': '1480',
-      'bestRating': '5',
-      'worstRating': '1'
-    },
+    'isAccessibleForFree': true,
     'offers': {
       '@type': 'Offer',
       'price': '0',
@@ -273,6 +267,28 @@ export function getToolSEOConfig(tool: ToolItem, customOrigin?: string): PageSEO
 }
 
 /**
+ * Genuine, visible Frequently Asked Questions on the ToolStack Homepage
+ */
+export const HOMEPAGE_FAQS = [
+  {
+    question: 'Are all tools on ToolStack completely free?',
+    answer: 'Yes, all 1,200+ utilities on ToolStack are 100% free with unlimited usage, zero subscriptions, and no hidden watermarks.'
+  },
+  {
+    question: 'Are my files or sensitive data uploaded to remote servers?',
+    answer: 'No. ToolStack is built with a strict privacy-first architecture. All PDF processing, image compression, math calculations, and cryptographic operations run locally inside your browser using client-side WebAssembly, HTML5 Canvas, and Web Crypto APIs.'
+  },
+  {
+    question: 'Do I need to create an account or install any software?',
+    answer: 'No installation or account creation is required to use public tools. Every utility runs instantly inside your web browser across Chrome, Safari, Edge, Firefox, Android, and iOS.'
+  },
+  {
+    question: 'What tool categories are available on ToolStack?',
+    answer: 'ToolStack features comprehensive utility suites including PDF Tools, Image Utilities, Developer Helpers, Financial Calculators, Unit Converters, Text Tools, Security Keys, and SEO Utilities.'
+  }
+];
+
+/**
  * Generate SEO configuration for Homepage
  */
 export function getHomeSEOConfig(customOrigin?: string): PageSEOConfig {
@@ -304,6 +320,18 @@ export function getHomeSEOConfig(customOrigin?: string): PageSEOConfig {
       'url': canonicalUrl,
       'logo': `${origin}${basePath}/icon.svg`,
       'sameAs': []
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      'mainEntity': HOMEPAGE_FAQS.map(faq => ({
+        '@type': 'Question',
+        'name': faq.question,
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': faq.answer
+        }
+      }))
     }
   ];
 
@@ -324,7 +352,7 @@ export function getHomeSEOConfig(customOrigin?: string): PageSEOConfig {
     ],
     canonicalUrl,
     indexable: true,
-    h1: '1,200+ Free Online Web Tools & Utilities',
+    h1: 'ToolStack – 1,200+ Free Online Web Tools & Utilities',
     seoTitle: 'ToolStack - 1,200+ All-in-One Free Online Tools & Utilities',
     seoDescription: 'Access 1,200+ free online tools for PDF merging, image compression, calculators, unit conversions, and developer utilities. 100% private, client-side, zero signup.',
     relatedTools: ['pdf-merge', 'pdf-compress', 'image-compressor', 'percentage-calculator'],

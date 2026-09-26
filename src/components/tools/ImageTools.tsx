@@ -18,6 +18,7 @@ import {
   Eye
 } from 'lucide-react';
 import { ToolItem } from '../../types';
+import { sanitizeSvg } from '../../utils/security';
 
 interface ImageToolsProps {
   tool: ToolItem;
@@ -265,8 +266,14 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ tool, onSuccess }) => {
   // --- SVG OPTIMIZER ACTION ---
   const handleOptimizeSvg = () => {
     try {
+      // Sanitize SVG to remove script tags, event handlers, and dangerous nodes
+      const sanitized = sanitizeSvg(svgInput);
+      if (!sanitized) {
+        setError('Invalid or unsafe SVG markup format.');
+        return;
+      }
       // Strip XML comments
-      let clean = svgInput.replace(/<!--[\s\S]*?-->/g, '');
+      let clean = sanitized.replace(/<!--[\s\S]*?-->/g, '');
       // Collapse whitespace between tags
       clean = clean.replace(/>\s+</g, '><');
       // Trim spaces
@@ -874,7 +881,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ tool, onSuccess }) => {
                 Live Vector Preview
               </label>
               <div className="h-[235px] border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden">
-                <div dangerouslySetInnerHTML={{ __html: optimizedSvg || svgInput }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeSvg(optimizedSvg || svgInput) }} />
               </div>
             </div>
           </div>
