@@ -27,8 +27,8 @@ service cloud.firestore {
              data.toolId is string && data.toolId.size() > 0 && data.toolId.size() <= 64 &&
              data.toolName is string && data.toolName.size() > 0 && data.toolName.size() <= 128 &&
              data.rating is number && data.rating >= 1 && data.rating <= 5 &&
-             data.type in ['rating', 'bug_report', 'improvement'] &&
-             data.comment is string && data.comment.size() <= 1000 &&
+             data.type in ['rating', 'bug_report', 'improvement', 'suggestion', 'new_tool'] &&
+             data.comment is string && data.comment.size() <= 2000 &&
              data.status in ['pending', 'reviewed', 'resolved'] &&
              data.userId is string && data.userId.size() <= 128;
     }
@@ -90,6 +90,12 @@ service cloud.firestore {
                        );
       allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow delete: if isAdmin();
+    }
+
+    // Custom tools and tool overrides
+    match /custom_tools/{toolId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // Test connection doc

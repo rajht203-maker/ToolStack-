@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { ToolsProvider, useTools } from './context/ToolsContext';
+import { FloatingFeedbackButton } from './components/feedback/FloatingFeedbackButton';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
 import { Footer } from './components/layout/Footer';
@@ -27,6 +29,7 @@ import { Sparkles, Shield, Lock, X, ArrowLeft, LogIn } from 'lucide-react';
 function AppContent() {
   const { isThemeModalOpen, closeThemeModal, openThemeModal } = useTheme();
   const { isAdmin, user, loading: authLoading } = useAuth();
+  const { tools, categories, getToolBySlug: getToolBySlugDynamic, disabledTools } = useTools();
   const [activeTool, setActiveTool] = useState<ToolItem | null>(null);
   const [notFoundSlug, setNotFoundSlug] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -123,7 +126,7 @@ function AppContent() {
     }
 
     if (toolSlug) {
-      const found = getToolBySlug(toolSlug);
+      const found = getToolBySlugDynamic(toolSlug);
       if (found) {
         setActiveTool(found);
         setNotFoundSlug(null);
@@ -143,7 +146,7 @@ function AppContent() {
     const catMatch = pathname.match(/\/category\/([^/?#]+)/) || (pParam && pParam.match(/category\/([^/?#]+)/));
     if (catMatch && catMatch[1]) {
       const catId = catMatch[1];
-      if (CATEGORIES.some(c => c.id === catId)) {
+      if (categories.some(c => c.id === catId)) {
         setSelectedCategory(catId);
         setActiveTool(null);
         setNotFoundSlug(null);
@@ -196,7 +199,7 @@ function AppContent() {
     setNotFoundSlug(null);
     setAdminPanelOpen(false);
     setPrivacyPolicyOpen(false);
-  }, []);
+  }, [getToolBySlugDynamic, categories]);
 
   // Initialize route on mount and listen to browser popstate
   useEffect(() => {
@@ -652,6 +655,9 @@ function AppContent() {
           onClose={closeThemeModal}
         />
 
+        {/* Floating Tool Feedback & Bug Report Button (Bottom-Right) */}
+        <FloatingFeedbackButton currentTool={activeTool} />
+
         {/* Real-time Offline Connectivity Status */}
         <OfflineIndicator />
       </div>
@@ -662,7 +668,9 @@ export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <AppContent />
+        <ToolsProvider>
+          <AppContent />
+        </ToolsProvider>
       </ThemeProvider>
     </AuthProvider>
   );

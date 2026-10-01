@@ -38,6 +38,14 @@ export interface ToolItem {
   relatedToolIds: string[];
   seoTitle: string;
   seoDescription: string;
+  // Admin custom tool & override fields
+  isCustom?: boolean;
+  customStatus?: 'active' | 'disabled' | 'maintenance';
+  customRunnerType?: 'utility' | 'prompt' | 'generator' | 'converter' | 'calculator';
+  customActionLabel?: string;
+  customTemplate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CategoryInfo {

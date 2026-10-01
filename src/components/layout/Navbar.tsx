@@ -18,7 +18,8 @@ import {
   HelpCircle,
   Palette
 } from 'lucide-react';
-import { CATEGORIES, TOOLS_DATA } from '../../data/toolsData';
+import { CATEGORIES as DEFAULT_CATEGORIES, TOOLS_DATA as DEFAULT_TOOLS_DATA } from '../../data/toolsData';
+import { useTools } from '../../context/ToolsContext';
 import { PWAInstallButton } from '../common/PWAInstallButton';
 
 interface NavbarProps {
@@ -50,6 +51,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { user, profile, isAdmin, signOutUser, favorites } = useAuth();
   const { openThemeModal, activeColors } = useTheme();
+  const { tools, categories, disabledTools } = useTools();
+  const activeTools = React.useMemo(() => {
+    return tools.filter(t => !disabledTools.includes(t.id));
+  }, [tools, disabledTools]);
+
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
 
@@ -86,7 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </span>
               </div>
               <span className="text-[10px] text-slate-400 font-medium tracking-tight block">
-                {TOOLS_DATA.length}+ Free & Member Tools
+                {activeTools.length}+ Free & Member Tools
               </span>
             </div>
           </button>
@@ -116,10 +122,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     }}
                     className="w-full px-3 py-2 text-left rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between"
                   >
-                    <span>All {TOOLS_DATA.length}+ Tools</span>
-                    <span className="text-indigo-600 font-bold">{TOOLS_DATA.length}+</span>
+                    <span>All {activeTools.length}+ Tools</span>
+                    <span className="text-indigo-600 font-bold">{activeTools.length}+</span>
                   </button>
-                  {CATEGORIES.map((cat) => (
+                  {categories.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => {
@@ -146,8 +152,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center gap-2 min-w-0">
               <Search className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors shrink-0" />
               <span className="font-medium truncate text-left">
-                <span className="inline md:hidden">Search {TOOLS_DATA.length}+ tools...</span>
-                <span className="hidden md:inline">Search {TOOLS_DATA.length}+ tools (PDF, JSON, Image...)...</span>
+                <span className="inline md:hidden">Search {activeTools.length}+ tools...</span>
+                <span className="hidden md:inline">Search {activeTools.length}+ tools (PDF, JSON, Image...)...</span>
               </span>
             </div>
             <kbd className="hidden sm:inline-block px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-full text-[10px] font-mono text-slate-400 shrink-0">

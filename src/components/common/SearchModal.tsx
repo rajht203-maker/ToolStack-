@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, X, ArrowRight, Sparkles, CheckCircle2, Lock, HelpCircle } from 'lucide-react';
-import { TOOLS_DATA } from '../../data/toolsData';
+import { useTools } from '../../context/ToolsContext';
 import { ToolItem } from '../../types';
 import { IconRenderer } from './IconRenderer';
 import { findToolsForProblem, POPULAR_PROBLEMS } from '../../utils/problemMatcher';
@@ -16,6 +16,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   onClose,
   onSelectTool
 }) => {
+  const { tools, disabledTools } = useTools();
+
+  const activeTools = useMemo(() => {
+    return tools.filter(t => !disabledTools.includes(t.id));
+  }, [tools, disabledTools]);
+
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'problem' | 'keyword'>('problem');
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -29,9 +35,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
   // Keyword search matches
   const keywordFilteredTools = useMemo(() => {
-    if (!query.trim()) return TOOLS_DATA.filter(t => t.popular).slice(0, 8);
+    if (!query.trim()) return activeTools.filter(t => t.popular).slice(0, 8);
     const q = query.toLowerCase();
-    return TOOLS_DATA.filter(t => {
+    return activeTools.filter(t => {
       return (
         t.name.toLowerCase().includes(q) ||
         t.description.toLowerCase().includes(q) ||
@@ -39,7 +45,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         t.tags.some(tag => tag.toLowerCase().includes(q))
       );
     }).slice(0, 8);
-  }, [query]);
+  }, [query, activeTools]);
 
   // Problem solver matches
   const problemMatchedTools = useMemo(() => {

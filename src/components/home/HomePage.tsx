@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { CATEGORIES, TOOLS_DATA, PLATFORM_STATS } from '../../data/toolsData';
+import { CATEGORIES as DEFAULT_CATEGORIES, TOOLS_DATA as DEFAULT_TOOLS_DATA, PLATFORM_STATS } from '../../data/toolsData';
+import { useTools } from '../../context/ToolsContext';
 import { ToolItem, CategoryInfo } from '../../types';
 import { ToolCard } from '../tools/ToolCard';
 import { MultiplexAd } from '../ads/MultiplexAd';
@@ -52,6 +53,12 @@ export const HomePage: React.FC<HomePageProps> = ({
   onToggleMemberFilter: externalOnToggleMemberFilter
 }) => {
   const { activeColors, openThemeModal, themeSettings } = useTheme();
+  const { tools, categories, disabledTools } = useTools();
+
+  const activeTools = useMemo(() => {
+    return tools.filter(t => !disabledTools.includes(t.id));
+  }, [tools, disabledTools]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMode, setSearchMode] = useState<'problem' | 'standard'>('problem');
   const [internalMemberOnlyFilter, setInternalMemberOnlyFilter] = useState(false);
@@ -81,9 +88,9 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   // Rank tools based strictly on click-frequency stored in localStorage
   const popularRankedTools = useMemo(() => {
-    return getMostPopularTools(TOOLS_DATA, popularityLimit);
+    return getMostPopularTools(activeTools, popularityLimit);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [popularityLimit, clickEventCounter]);
+  }, [activeTools, popularityLimit, clickEventCounter]);
 
   const handleToolSelection = useCallback(
     (tool: ToolItem) => {
@@ -101,7 +108,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   // Filter tools
   const filteredTools = useMemo(() => {
-    return TOOLS_DATA.filter((tool) => {
+    return activeTools.filter((tool) => {
       if (memberOnlyFilter && !tool.requiresAuth) return false;
       const matchesCat = !selectedCategory || tool.category === selectedCategory;
       const q = searchQuery.toLowerCase().trim();
@@ -113,12 +120,12 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       return matchesCat && matchesSearch;
     });
-  }, [selectedCategory, searchQuery, memberOnlyFilter]);
+  }, [activeTools, selectedCategory, searchQuery, memberOnlyFilter]);
 
   // Trending / popular tools for hero strip
   const trendingTools = useMemo(() => {
-    return TOOLS_DATA.filter(t => t.trending || t.popular).slice(0, 4);
-  }, []);
+    return activeTools.filter(t => t.trending || t.popular).slice(0, 4);
+  }, [activeTools]);
 
   return (
     <div className="space-y-12 pb-16">
@@ -130,7 +137,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         <div className="relative max-w-4xl mx-auto space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-widest shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-            <span>{TOOLS_DATA.length}+ Working Utilities • Local In-Browser Processing</span>
+            <span>{activeTools.length}+ Working Utilities • Local In-Browser Processing</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-slate-900 dark:text-white">
@@ -162,7 +169,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   onClick={(e) => {
                     if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
                       e.preventDefault();
-                      const found = TOOLS_DATA.find(x => x.slug === t.slug);
+                      const found = activeTools.find(x => x.slug === t.slug || x.id === t.slug);
                       if (found) handleToolSelection(found);
                     }
                   }}
@@ -238,7 +245,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </span>
             <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
               <Zap className="w-4 h-4 text-amber-500" />
-              {TOOLS_DATA.length}+ Working Utilities
+              {activeTools.length}+ Working Utilities
             </span>
             {/* Custom Tools Theme Pill */}
             <button
@@ -370,7 +377,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               {memberOnlyFilter 
                 ? 'Members-Exclusive Pro Suite' 
                 : selectedCategory 
-                  ? `${CATEGORIES.find(c => c.id === selectedCategory)?.name || 'Category'} Tools` 
+                  ? `${categories.find(c => c.id === selectedCategory)?.name || 'Category'} Tools` 
                   : 'Browse by Category'}
             </h2>
           </div>
@@ -400,7 +407,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500'
             }`}
           >
-            All Tools ({TOOLS_DATA.length})
+            All Tools ({activeTools.length})
           </button>
           <button
             onClick={() => setMemberOnlyFilter(!memberOnlyFilter)}
@@ -411,9 +418,9 @@ export const HomePage: React.FC<HomePageProps> = ({
             }`}
           >
             <Lock className="w-3.5 h-3.5 text-amber-500" />
-            <span>Members Suite ({TOOLS_DATA.filter(t => t.requiresAuth).length})</span>
+            <span>Members Suite ({activeTools.filter(t => t.requiresAuth).length})</span>
           </button>
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => {
@@ -524,8 +531,8 @@ export const HomePage: React.FC<HomePageProps> = ({
           </h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {CATEGORIES.map((cat) => {
-            const count = TOOLS_DATA.filter(t => t.category === cat.id).length;
+          {categories.map((cat) => {
+            const count = activeTools.filter(t => t.category === cat.id).length;
             return (
               <a
                 key={cat.id}

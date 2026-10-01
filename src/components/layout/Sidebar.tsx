@@ -1,5 +1,6 @@
 import React from 'react';
-import { CATEGORIES, TOOLS_DATA } from '../../data/toolsData';
+import { CATEGORIES as DEFAULT_CATEGORIES, TOOLS_DATA as DEFAULT_TOOLS_DATA } from '../../data/toolsData';
+import { useTools } from '../../context/ToolsContext';
 import { ToolItem } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -60,18 +61,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { user, profile, favorites } = useAuth();
   const { openThemeModal, activeColors } = useTheme();
+  const { tools, categories, disabledTools } = useTools();
+
+  const activeTools = React.useMemo(() => {
+    return tools.filter(t => !disabledTools.includes(t.id));
+  }, [tools, disabledTools]);
 
   // Category counts
   const categoryCounts = React.useMemo(() => {
     const map: Record<string, number> = {};
-    TOOLS_DATA.forEach(t => {
+    activeTools.forEach(t => {
       map[t.category] = (map[t.category] || 0) + 1;
     });
     return map;
-  }, []);
+  }, [activeTools]);
 
-  const totalToolsCount = TOOLS_DATA.length;
-  const memberToolsCount = TOOLS_DATA.filter(t => t.requiresAuth).length;
+  const totalToolsCount = activeTools.length;
+  const memberToolsCount = activeTools.filter(t => t.requiresAuth).length;
 
   const sidebarContent = (
     <div className="h-full flex flex-col justify-between bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all select-none">
@@ -186,7 +192,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
 
           <div className="space-y-1">
-            {CATEGORIES.map(cat => {
+            {categories.map(cat => {
               const count = categoryCounts[cat.id] || 0;
               const isSelected = selectedCategory === cat.id;
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTools } from '../../context/ToolsContext';
 import { TOOLS_DATA, CATEGORIES } from '../../data/toolsData';
 import { ToolItem, UserProfile, AdminAuditLog } from '../../types';
 import { 
@@ -33,13 +34,17 @@ import {
   MessageSquare,
   Bug,
   Lightbulb,
-  Globe
+  Globe,
+  Plus,
+  Pencil,
+  RotateCcw
 } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { getAllFeedback, updateFeedbackStatus, deleteFeedbackItem } from '../../services/feedbackService';
 import { ToolFeedback, FeedbackType } from '../../types';
 import { SEOAuditDashboard } from './SEOAuditDashboard';
+import { ToolEditModal } from './ToolEditModal';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -72,10 +77,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
   const [savingSettings, setSavingSettings] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // --- Tool Registry State ---
+  // --- Tool Registry & Overrides from ToolsContext ---
+  const { 
+    tools: registryTools, 
+    categories: registryCategories,
+    customTools, 
+    overriddenToolIds, 
+    disabledTools, 
+    toggleToolStatus: contextToggleToolStatus, 
+    deleteCustomTool, 
+    resetToolToDefault 
+  } = useTools();
+
   const [toolSearch, setToolSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [disabledTools, setDisabledTools] = useState<string[]>([]);
+  const [toolOriginFilter, setToolOriginFilter] = useState<'all' | 'custom' | 'modified' | 'disabled'>('all');
+  const [toolEditModalOpen, setToolEditModalOpen] = useState(false);
+  const [selectedToolToEdit, setSelectedToolToEdit] = useState<ToolItem | null>(null);
 
   // --- User Management State ---
   const [usersList, setUsersList] = useState<UserProfile[]>([]);
@@ -121,7 +139,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
           if (data.announcement) setAnnouncement(data.announcement);
           if (typeof data.maintenanceMode === 'boolean') setMaintenanceMode(data.maintenanceMode);
           if (data.supportEmail) setSupportEmail(data.supportEmail);
-          if (Array.isArray(data.disabledTools)) setDisabledTools(data.disabledTools);
         }
       } catch (err) {
         console.warn('Firestore settings load notice:', err);
@@ -240,25 +257,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
   };
 
   const toggleToolStatus = async (toolId: string) => {
-    const updated = disabledTools.includes(toolId) 
-      ? disabledTools.filter(id => id !== toolId) 
-      : [...disabledTools, toolId];
-    
-    setDisabledTools(updated);
-    
     try {
-      await setDoc(doc(db, 'site_settings', 'global'), {
-        disabledTools: updated,
-        updatedAt: new Date().toISOString(),
-        updatedBy: user?.email || 'admin'
-      }, { merge: true });
-
+      await contextToggleToolStatus(toolId);
       await logAdminAction(
         'TOOL_TOGGLE',
-        `Tool ${toolId} status toggled to ${disabledTools.includes(toolId) ? 'ACTIVE' : 'DISABLED'}`
+        `Tool ${toolId} status toggled`
       );
     } catch (err) {
-      console.warn('Failed to sync tool status to Firestore:', err);
+      console.warn('Failed to sync tool status:', err);
     }
   };
 
@@ -381,13 +387,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
     );
   }
 
-  // Filtered Tools
-  const filteredTools = TOOLS_DATA.filter(t => {
+  // Filtered Tools from Registry
+  const filteredTools = registryTools.filter(t => {
     const matchesSearch = t.name.toLowerCase().includes(toolSearch.toLowerCase()) ||
                           t.category.toLowerCase().includes(toolSearch.toLowerCase()) ||
-                          t.tags.some(tag => tag.toLowerCase().includes(toolSearch.toLowerCase()));
+                          (t.tags || []).some(tag => tag.toLowerCase().includes(toolSearch.toLowerCase())) ||
+                          t.slug.toLowerCase().includes(toolSearch.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || t.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+
+    let matchesOrigin = true;
+    if (toolOriginFilter === 'custom') {
+      matchesOrigin = Boolean(t.isCustom);
+    } else if (toolOriginFilter === 'modified') {
+      matchesOrigin = overriddenToolIds.includes(t.id);
+    } else if (toolOriginFilter === 'disabled') {
+      matchesOrigin = disabledTools.includes(t.id);
+    }
+
+    return matchesSearch && matchesCategory && matchesOrigin;
   });
 
   // Filtered Users
@@ -468,7 +485,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
             }`}
           >
             <Wrench className="w-3.5 h-3.5" />
-            Tool Registry ({TOOLS_DATA.length})
+            Tool Registry ({registryTools.length})
           </button>
 
           <button
@@ -539,7 +556,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
                 <Wrench className="w-4 h-4 text-indigo-500" />
               </div>
               <div className="text-3xl font-black text-slate-900 dark:text-white">
-                {TOOLS_DATA.length - disabledTools.length} / {TOOLS_DATA.length}
+                {registryTools.length - disabledTools.length} / {registryTools.length}
               </div>
               <p className="text-[11px] text-emerald-500 font-medium">
                 {disabledTools.length === 0 ? '100% Operational & Available' : `${disabledTools.length} tools disabled`}
@@ -600,7 +617,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
               </div>
               <h3 className="font-bold text-sm text-slate-900 dark:text-white">Tool Inventory Control</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Instantly toggle any of the {TOOLS_DATA.length} tools on/off with live synchronization.
+                Instantly toggle any of the {registryTools.length} tools on/off with live synchronization.
               </p>
             </div>
 
@@ -917,7 +934,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                Tool Inventory Registry ({TOOLS_DATA.length} Tools)
+                Tool Inventory Registry ({registryTools.length} Tools)
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Manage operational status, verify routing, and run test executions.
@@ -925,7 +942,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
             </div>
 
             <div className="text-xs font-bold text-slate-500">
-              Active: <strong className="text-emerald-600">{TOOLS_DATA.length - disabledTools.length}</strong> • 
+              Active: <strong className="text-emerald-600">{registryTools.length - disabledTools.length}</strong> • 
               Disabled: <strong className="text-rose-600">{disabledTools.length}</strong>
             </div>
           </div>
@@ -1250,7 +1267,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
                   return matchesSearch && matchesType && matchesStatus;
                 })
                 .map((item) => {
-                  const targetTool = TOOLS_DATA.find(t => t.id === item.toolId);
+                  const targetTool = registryTools.find(t => t.id === item.toolId);
 
                   return (
                     <div

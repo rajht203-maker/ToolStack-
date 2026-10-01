@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { TOOLS_DATA, CATEGORIES } from '../../data/toolsData';
+import { CATEGORIES as DEFAULT_CATEGORIES, TOOLS_DATA as DEFAULT_TOOLS_DATA } from '../../data/toolsData';
+import { useTools } from '../../context/ToolsContext';
 import { ToolItem } from '../../types';
 import { getToolSEOConfig, getSiteOrigin, getBasePath } from '../../utils/seoConfig';
 import { generateSitemapXML, generateRobotsTxt, getAllSitemapURLs } from '../../utils/sitemapGenerator';
@@ -28,6 +29,7 @@ interface SEOAuditDashboardProps {
 }
 
 export const SEOAuditDashboard: React.FC<SEOAuditDashboardProps> = ({ onSelectTool }) => {
+  const { tools, categories } = useTools();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'issues' | 'perfect'>('all');
@@ -40,14 +42,14 @@ export const SEOAuditDashboard: React.FC<SEOAuditDashboardProps> = ({ onSelectTo
   // Run comprehensive SEO audit across all tools
   const auditResults = useMemo(() => {
     const sitemapUrls = new Set(getAllSitemapURLs(siteOrigin).map(u => u.loc));
-    const allToolIdentifiers = new Set([...TOOLS_DATA.map(t => t.id), ...TOOLS_DATA.map(t => t.slug)]);
+    const allToolIdentifiers = new Set([...tools.map(t => t.id), ...tools.map(t => t.slug)]);
     const slugMap = new Map<string, number>();
 
-    for (const tool of TOOLS_DATA) {
+    for (const tool of tools) {
       slugMap.set(tool.slug, (slugMap.get(tool.slug) || 0) + 1);
     }
 
-    const items = TOOLS_DATA.map((tool) => {
+    const items = tools.map((tool) => {
       const config = getToolSEOConfig(tool, siteOrigin);
       const issues: string[] = [];
 
@@ -109,8 +111,8 @@ export const SEOAuditDashboard: React.FC<SEOAuditDashboardProps> = ({ onSelectTo
     });
 
     // Summary statistics
-    const totalTools = TOOLS_DATA.length;
-    const indexablePages = totalTools + CATEGORIES.length + 1; // tools + categories + home
+    const totalTools = tools.length;
+    const indexablePages = totalTools + categories.length + 1; // tools + categories + home
     const noindexPages = 2; // /admin and /404
 
     let missingTitle = 0;
@@ -463,8 +465,8 @@ export const SEOAuditDashboard: React.FC<SEOAuditDashboardProps> = ({ onSelectTo
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-semibold focus:outline-none"
           >
-            <option value="all">All Categories ({CATEGORIES.length})</option>
-            {CATEGORIES.map(cat => (
+            <option value="all">All Categories ({categories.length})</option>
+            {categories.map(cat => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>

@@ -38,6 +38,7 @@ import { TwoHundredDistributedToolsSuite } from './TwoHundredDistributedToolsSui
 import { TWO_HUNDRED_TOOL_IDS } from '../../data/twoHundredDistributedToolsData';
 import { MemberExclusiveToolsSuite } from './MemberExclusiveToolsSuite';
 import { MEMBER_EXCLUSIVE_TOOL_IDS } from '../../data/memberExclusiveToolsData';
+import { CustomToolRunner } from './CustomToolRunner';
 
 interface ToolDispatcherProps {
   tool: ToolItem;
@@ -185,6 +186,11 @@ const MODERN_BUSINESS_TOOL_IDS = [
 ];
 
 export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool, onSuccess }) => {
+  // Check Admin-created custom tools
+  if (tool.isCustom) {
+    return <CustomToolRunner tool={tool} onSuccess={onSuccess} />;
+  }
+
   // Check flagship Business Card Studio & QR Generator with Logo
   if (tool.id === 'business-card-maker' || tool.slug === 'business-card-maker') {
     return <BusinessCardMakerTool tool={tool} onSuccess={onSuccess} />;

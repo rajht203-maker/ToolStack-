@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { TOOLS_DATA } from '../../data/toolsData';
+import { useTools } from '../../context/ToolsContext';
 import { ToolItem } from '../../types';
 import { IconRenderer } from './IconRenderer';
 import { X, Heart, History, Trash2, ArrowRight, Sparkles } from 'lucide-react';
@@ -17,12 +17,13 @@ export const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
   onSelectTool
 }) => {
   const { favorites, history, removeFavorite, clearHistory, user } = useAuth();
+  const { tools } = useTools();
   const [activeTab, setActiveTab] = useState<'favorites' | 'history'>('favorites');
 
   if (!isOpen) return null;
 
   const favoriteTools = favorites
-    .map(f => TOOLS_DATA.find(t => t.id === f.toolId))
+    .map(f => tools.find(t => t.id === f.toolId))
     .filter((t): t is ToolItem => t !== undefined);
 
   return (
@@ -146,7 +147,7 @@ export const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
                 ) : (
                   <div className="space-y-2.5">
                     {history.map((item) => {
-                      const t = TOOLS_DATA.find(x => x.id === item.toolId);
+                      const t = tools.find(x => x.id === item.toolId);
                       return (
                         <div
                           key={item.id}

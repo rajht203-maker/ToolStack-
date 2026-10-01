@@ -88,8 +88,8 @@
         "toolId": { "type": "string", "maxLength": 64 },
         "toolName": { "type": "string", "maxLength": 128 },
         "rating": { "type": "number", "minimum": 1, "maximum": 5 },
-        "type": { "type": "string", "enum": ["rating", "bug_report", "improvement"] },
-        "comment": { "type": "string", "maxLength": 1000 },
+        "type": { "type": "string", "enum": ["rating", "bug_report", "improvement", "suggestion", "new_tool"] },
+        "comment": { "type": "string", "maxLength": 2000 },
         "userId": { "type": "string", "maxLength": 128 },
         "userEmail": { "type": "string", "maxLength": 256 },
         "userName": { "type": "string", "maxLength": 128 },
@@ -97,6 +97,27 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["feedbackId", "toolId", "toolName", "rating", "type", "comment", "status", "userId"]
+    },
+    "CustomTool": {
+      "title": "Custom Tool and Overrides",
+      "description": "Admin managed custom tools and configuration overrides",
+      "type": "object",
+      "properties": {
+        "toolId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "slug": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 64 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "badge": { "type": "string", "maxLength": 32 },
+        "tags": { "type": "string", "maxLength": 512 },
+        "status": { "type": "string", "enum": ["active", "disabled", "maintenance"] },
+        "isCustom": { "type": "boolean" },
+        "howToUse": { "type": "string", "maxLength": 4096 },
+        "faqs": { "type": "string", "maxLength": 4096 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["toolId", "name", "slug", "category", "description", "status"]
     },
     "TestConnection": {
       "title": "Test Connection",
@@ -139,6 +160,10 @@
     "/tool_feedback/{feedbackId}": {
       "schema": "ToolFeedback",
       "description": "Tool ratings, bug reports, and improvement requests submitted by users"
+    },
+    "/custom_tools/{toolId}": {
+      "schema": "CustomTool",
+      "description": "Admin defined custom tools and tool modifications"
     }
   }
 }

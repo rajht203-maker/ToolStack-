@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SEOHead } from '../seo/SEOHead';
 import { getSiteOrigin, getBasePath } from '../../utils/seoConfig';
 import { ToolItem } from '../../types';
-import { TOOLS_DATA } from '../../data/toolsData';
+import { useTools } from '../../context/ToolsContext';
 import { Search, Home, ArrowRight, AlertCircle, Compass } from 'lucide-react';
 
 interface NotFoundPageProps {
@@ -16,6 +16,8 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
   onSelectTool,
   requestedSlug
 }) => {
+  const { tools, disabledTools } = useTools();
+  const activeTools = tools.filter(t => !disabledTools.includes(t.id));
   const [searchQuery, setSearchQuery] = useState('');
 
   const siteOrigin = getSiteOrigin();
@@ -24,24 +26,24 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
   const seoConfig = {
     name: '404 - Tool Not Found',
     slug: '404',
-    description: 'The requested tool or page could not be found. Explore 1,200+ free online web utilities on ToolStack.',
+    description: 'The requested tool or page could not be found. Explore free online web utilities on ToolStack.',
     category: 'system',
     keywords: [],
     canonicalUrl: `${siteOrigin}${basePath}/404`,
     indexable: false, // Strict NOINDEX for 404 pages
     h1: '404 - Tool Not Found',
     seoTitle: 'Page Not Found (404) | ToolStack',
-    seoDescription: 'The page you requested could not be located. Browse 1,200+ free online tools on ToolStack.',
+    seoDescription: 'The page you requested could not be located. Browse free online tools on ToolStack.',
     relatedTools: [],
     structuredData: []
   };
 
-  const popularTools = TOOLS_DATA.filter(t => 
+  const popularTools = activeTools.filter(t => 
     ['pdf-merge', 'pdf-compress', 'image-compressor', 'percentage-calculator', 'qr-code-generator', 'word-counter'].includes(t.slug)
   );
 
   const searchResults = searchQuery.trim()
-    ? TOOLS_DATA.filter(t => 
+    ? activeTools.filter(t => 
         t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
