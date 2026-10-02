@@ -1,44 +1,53 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { ToolItem } from '../../types';
-import { PdfTools } from './PdfTools';
-import { ImageTools } from './ImageTools';
-import { TextTools } from './TextTools';
-import { DevTools } from './DevTools';
-import { CalculatorTools } from './CalculatorTools';
-import { ConverterTools } from './ConverterTools';
-import { SecurityTools } from './SecurityTools';
-import { SeoTools } from './SeoTools';
-import { AiFutureTools } from './AiFutureTools';
-import { NextGenDevTools } from './NextGenDevTools';
-import { ModernMediaTools } from './ModernMediaTools';
-import { ModernBusinessTools } from './ModernBusinessTools';
-import { PremiumDevTools } from './PremiumDevTools';
-import { PremiumProductivityTools } from './PremiumProductivityTools';
-import { PublicUtilityTools } from './PublicUtilityTools';
-import { AdvancedMemberTools } from './AdvancedMemberTools';
-import { BusinessCardMakerTool } from './BusinessCardMakerTool';
-import { QrCodeLogoGeneratorTool } from './QrCodeLogoGeneratorTool';
-import { NewPdfToolsSuite } from './NewPdfToolsSuite';
-import { NewImageToolsSuite } from './NewImageToolsSuite';
-import { HundredPdfToolsSuite } from './HundredPdfToolsSuite';
-import { HundredImageToolsSuite } from './HundredImageToolsSuite';
 import { HUNDRED_PDF_TOOL_IDS, HUNDRED_IMAGE_TOOL_IDS } from '../../data/hundredPdfAndImageToolsData';
-import { HighTrafficPeopleToolsSuite } from './HighTrafficPeopleToolsSuite';
 import { HIGH_TRAFFIC_TOOL_IDS } from '../../data/highTrafficPeopleToolsData';
-import { AllWorldPdfToolsSuite } from './AllWorldPdfToolsSuite';
-import { AllWorldImageToolsSuite } from './AllWorldImageToolsSuite';
 import { ALL_WORLD_PDF_TOOL_IDS } from '../../data/allWorldPdfToolsData';
 import { ALL_WORLD_IMAGE_TOOL_IDS } from '../../data/allWorldImageToolsData';
-import { MegaPdfAndImageToolsSuite } from './MegaPdfAndImageToolsSuite';
 import { MEGA_PDF_TOOL_IDS } from '../../data/megaPdfToolsData';
 import { MEGA_IMAGE_TOOL_IDS } from '../../data/megaImageToolsData';
-import { HundredDistributedToolsSuite } from './HundredDistributedToolsSuite';
 import { HUNDRED_DISTRIBUTED_TOOL_IDS } from '../../data/hundredEquallyDistributedToolsData';
-import { TwoHundredDistributedToolsSuite } from './TwoHundredDistributedToolsSuite';
 import { TWO_HUNDRED_TOOL_IDS } from '../../data/twoHundredDistributedToolsData';
-import { MemberExclusiveToolsSuite } from './MemberExclusiveToolsSuite';
 import { MEMBER_EXCLUSIVE_TOOL_IDS } from '../../data/memberExclusiveToolsData';
-import { CustomToolRunner } from './CustomToolRunner';
+
+// Lazy-load all tool suites for optimal performance and instant initial page load
+const PdfTools = lazy(() => import('./PdfTools').then(m => ({ default: m.PdfTools })));
+const ImageTools = lazy(() => import('./ImageTools').then(m => ({ default: m.ImageTools })));
+const TextTools = lazy(() => import('./TextTools').then(m => ({ default: m.TextTools })));
+const DevTools = lazy(() => import('./DevTools').then(m => ({ default: m.DevTools })));
+const CalculatorTools = lazy(() => import('./CalculatorTools').then(m => ({ default: m.CalculatorTools })));
+const ConverterTools = lazy(() => import('./ConverterTools').then(m => ({ default: m.ConverterTools })));
+const SecurityTools = lazy(() => import('./SecurityTools').then(m => ({ default: m.SecurityTools })));
+const SeoTools = lazy(() => import('./SeoTools').then(m => ({ default: m.SeoTools })));
+const AiFutureTools = lazy(() => import('./AiFutureTools').then(m => ({ default: m.AiFutureTools })));
+const NextGenDevTools = lazy(() => import('./NextGenDevTools').then(m => ({ default: m.NextGenDevTools })));
+const ModernMediaTools = lazy(() => import('./ModernMediaTools').then(m => ({ default: m.ModernMediaTools })));
+const ModernBusinessTools = lazy(() => import('./ModernBusinessTools').then(m => ({ default: m.ModernBusinessTools })));
+const PremiumDevTools = lazy(() => import('./PremiumDevTools').then(m => ({ default: m.PremiumDevTools })));
+const PremiumProductivityTools = lazy(() => import('./PremiumProductivityTools').then(m => ({ default: m.PremiumProductivityTools })));
+const PublicUtilityTools = lazy(() => import('./PublicUtilityTools').then(m => ({ default: m.PublicUtilityTools })));
+const AdvancedMemberTools = lazy(() => import('./AdvancedMemberTools').then(m => ({ default: m.AdvancedMemberTools })));
+const BusinessCardMakerTool = lazy(() => import('./BusinessCardMakerTool').then(m => ({ default: m.BusinessCardMakerTool })));
+const QrCodeLogoGeneratorTool = lazy(() => import('./QrCodeLogoGeneratorTool').then(m => ({ default: m.QrCodeLogoGeneratorTool })));
+const NewPdfToolsSuite = lazy(() => import('./NewPdfToolsSuite').then(m => ({ default: m.NewPdfToolsSuite })));
+const NewImageToolsSuite = lazy(() => import('./NewImageToolsSuite').then(m => ({ default: m.NewImageToolsSuite })));
+const HundredPdfToolsSuite = lazy(() => import('./HundredPdfToolsSuite').then(m => ({ default: m.HundredPdfToolsSuite })));
+const HundredImageToolsSuite = lazy(() => import('./HundredImageToolsSuite').then(m => ({ default: m.HundredImageToolsSuite })));
+const HighTrafficPeopleToolsSuite = lazy(() => import('./HighTrafficPeopleToolsSuite').then(m => ({ default: m.HighTrafficPeopleToolsSuite })));
+const AllWorldPdfToolsSuite = lazy(() => import('./AllWorldPdfToolsSuite').then(m => ({ default: m.AllWorldPdfToolsSuite })));
+const AllWorldImageToolsSuite = lazy(() => import('./AllWorldImageToolsSuite').then(m => ({ default: m.AllWorldImageToolsSuite })));
+const MegaPdfAndImageToolsSuite = lazy(() => import('./MegaPdfAndImageToolsSuite').then(m => ({ default: m.MegaPdfAndImageToolsSuite })));
+const HundredDistributedToolsSuite = lazy(() => import('./HundredDistributedToolsSuite').then(m => ({ default: m.HundredDistributedToolsSuite })));
+const TwoHundredDistributedToolsSuite = lazy(() => import('./TwoHundredDistributedToolsSuite').then(m => ({ default: m.TwoHundredDistributedToolsSuite })));
+const MemberExclusiveToolsSuite = lazy(() => import('./MemberExclusiveToolsSuite').then(m => ({ default: m.MemberExclusiveToolsSuite })));
+const CustomToolRunner = lazy(() => import('./CustomToolRunner').then(m => ({ default: m.CustomToolRunner })));
+
+const ToolLoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center p-12 min-h-[280px] space-y-4">
+    <div className="w-9 h-9 border-3 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Loading interactive tool workspace...</p>
+  </div>
+);
 
 interface ToolDispatcherProps {
   tool: ToolItem;
@@ -185,7 +194,7 @@ const MODERN_BUSINESS_TOOL_IDS = [
   'meeting-cost-calculator'
 ];
 
-export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool, onSuccess }) => {
+function renderToolContent(tool: ToolItem, onSuccess: (summary: string) => void) {
   // Check Admin-created custom tools
   if (tool.isCustom) {
     return <CustomToolRunner tool={tool} onSuccess={onSuccess} />;
@@ -328,4 +337,12 @@ export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool, onSuccess 
 
   // Fallback to text tool
   return <TextTools tool={tool} onSuccess={onSuccess} />;
+}
+
+export const ToolDispatcher: React.FC<ToolDispatcherProps> = ({ tool, onSuccess }) => {
+  return (
+    <Suspense fallback={<ToolLoadingFallback />}>
+      {renderToolContent(tool, onSuccess)}
+    </Suspense>
+  );
 };

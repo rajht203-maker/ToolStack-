@@ -914,7 +914,7 @@ add_header 'Access-Control-Allow-Credentials' '${corsCredentials ? 'true' : 'fal
           </div>
 
           <div className="max-w-md mx-auto border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-md">
-            <img src={socialImg} alt="Preview" className="w-full h-44 object-cover" />
+            <img src={socialImg} alt="Preview" width="448" height="176" className="w-full h-44 object-cover" />
             <div className="p-4 space-y-1">
               <div className="text-[10px] text-slate-400 uppercase font-mono">toolstack.io</div>
               <div className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1">{socialTitle}</div>

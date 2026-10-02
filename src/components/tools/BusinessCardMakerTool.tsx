@@ -673,7 +673,7 @@ export const BusinessCardMakerTool: React.FC<BusinessCardMakerProps> = ({ tool, 
               <div className="flex items-center gap-3">
                 {logoUrl ? (
                   <div className="relative w-14 h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-1 flex items-center justify-center shrink-0">
-                    <img src={logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                    <img src={logoUrl} alt="Logo" width="48" height="48" className="max-w-full max-h-full object-contain" />
                     <button
                       onClick={() => setLogoUrl(null)}
                       className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold shadow-xs"
@@ -845,7 +845,7 @@ export const BusinessCardMakerTool: React.FC<BusinessCardMakerProps> = ({ tool, 
                     <div className="flex items-center gap-3 min-w-0">
                       {logoUrl ? (
                         <div className="w-11 h-11 rounded-xl bg-white/10 p-1 border border-white/20 flex items-center justify-center shrink-0">
-                          <img src={logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                          <img src={logoUrl} alt="Logo" width="36" height="36" className="max-w-full max-h-full object-contain" />
                         </div>
                       ) : (
                         <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-black text-base flex items-center justify-center shrink-0 shadow-sm">
@@ -864,7 +864,7 @@ export const BusinessCardMakerTool: React.FC<BusinessCardMakerProps> = ({ tool, 
 
                     {showQrOnFront && qrCodeDataUrl && (
                       <div className="w-16 h-16 rounded-lg bg-white p-1 shadow-xs shrink-0">
-                        <img src={qrCodeDataUrl} alt="QR Code" className="w-full h-full object-contain" />
+                        <img src={qrCodeDataUrl} alt="QR Code" width="64" height="64" className="w-full h-full object-contain" />
                       </div>
                     )}
                   </div>
@@ -912,7 +912,7 @@ export const BusinessCardMakerTool: React.FC<BusinessCardMakerProps> = ({ tool, 
                   {showQrOnBack && qrCodeDataUrl ? (
                     <div className="space-y-3 flex flex-col items-center">
                       <div className="w-28 h-28 sm:w-32 sm:h-32 bg-white rounded-2xl p-2 shadow-md flex items-center justify-center">
-                        <img src={qrCodeDataUrl} alt="vCard QR" className="w-full h-full object-contain" />
+                        <img src={qrCodeDataUrl} alt="vCard QR" width="112" height="112" className="w-full h-full object-contain" />
                       </div>
                       <div>
                         <p className="font-bold text-xs sm:text-sm">{companyName}</p>
@@ -925,7 +925,7 @@ export const BusinessCardMakerTool: React.FC<BusinessCardMakerProps> = ({ tool, 
                     <div className="space-y-2 flex flex-col items-center">
                       {logoUrl ? (
                         <div className="w-16 h-16 rounded-2xl bg-white/10 p-2 border border-white/20 flex items-center justify-center">
-                          <img src={logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                          <img src={logoUrl} alt="Logo" width="64" height="64" className="max-w-full max-h-full object-contain" />
                         </div>
                       ) : (
                         <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white font-black text-xl flex items-center justify-center">

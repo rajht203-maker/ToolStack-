@@ -218,7 +218,7 @@ export const SEOAuditDashboard: React.FC<SEOAuditDashboardProps> = ({ onSelectTo
             SEO Health & Google Indexing Dashboard
           </h2>
           <p className="text-xs sm:text-sm text-indigo-200/90 max-w-xl leading-relaxed">
-            Automated compliance audit across all 1,200+ utilities. Validates canonical URLs, unique titles, Open Graph, dynamic XML sitemaps, and Schema.org JSON-LD structured data.
+            Automated compliance audit across all 1,200 utilities. Validates canonical URLs, unique titles, Open Graph, dynamic XML sitemaps, and Schema.org JSON-LD structured data.
           </p>
         </div>
 
@@ -293,7 +293,7 @@ export const SEOAuditDashboard: React.FC<SEOAuditDashboardProps> = ({ onSelectTo
                 Submit Sitemap
               </div>
               <p className="leading-relaxed">
-                Under the <strong>Sitemaps</strong> menu in GSC, submit: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">sitemap.xml</code>. Google will crawl all 1,200+ URLs and discover all PDF, image, calculator, and developer tools.
+                Under the <strong>Sitemaps</strong> menu in GSC, submit: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">sitemap.xml</code>. Google will crawl all 1,200 URLs and discover all PDF, image, calculator, and developer tools.
               </p>
             </div>
 

@@ -59,9 +59,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
       ? 'p-4 min-h-[145px]'
       : 'p-5 sm:p-6 min-h-[175px]';
 
-  const toolSubpath = tool.category === 'calculator' 
-    ? `/calculators/${tool.slug}` 
-    : `/tools/${tool.slug}`;
+  const toolSubpath = `/${tool.slug}`;
 
   return (
     <a

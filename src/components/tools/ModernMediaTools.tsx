@@ -271,6 +271,8 @@ ToolStack is a **100% client-side** utilities powerhouse.
               <img
                 src={qrImageUrl}
                 alt="QR Code"
+                width="176"
+                height="176"
                 className="w-44 h-44 rounded-2xl shadow-md bg-white p-2"
               />
               <a
@@ -417,6 +419,8 @@ ToolStack is a **100% client-side** utilities powerhouse.
                 <img
                   src={ogImage}
                   alt="OG Banner"
+                  width="600"
+                  height="315"
                   className="w-full h-44 object-cover"
                 />
                 <div className="p-4 space-y-1">

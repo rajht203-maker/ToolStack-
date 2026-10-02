@@ -272,7 +272,7 @@ export function getToolSEOConfig(tool: ToolItem, customOrigin?: string): PageSEO
 export const HOMEPAGE_FAQS = [
   {
     question: 'Are all tools on ToolStack completely free?',
-    answer: 'Yes, all 1,200+ utilities on ToolStack are 100% free with unlimited usage, zero subscriptions, and no hidden watermarks.'
+    answer: 'Yes, all 1,200 utilities on ToolStack are 100% free with unlimited usage, zero subscriptions, and no hidden watermarks.'
   },
   {
     question: 'Are my files or sensitive data uploaded to remote servers?',
@@ -303,7 +303,7 @@ export function getHomeSEOConfig(customOrigin?: string): PageSEOConfig {
       'name': 'ToolStack',
       'alternateName': 'ToolStack Online Utilities',
       'url': canonicalUrl,
-      'description': 'All-in-one free online tools platform with 1,200+ utilities including PDF & image suites, developer tools, calculators, converters, security keys, and SEO tools.',
+      'description': 'ToolStack offers 1,200 free, private online tools for PDF, image, text, developer utilities, and calculators. Fast, secure, and client-side with zero install.',
       'potentialAction': {
         '@type': 'SearchAction',
         'target': {
@@ -338,7 +338,7 @@ export function getHomeSEOConfig(customOrigin?: string): PageSEOConfig {
   return {
     name: 'ToolStack',
     slug: '',
-    description: 'All-in-one free online tools platform with 1,200+ browser-based utilities.',
+    description: 'ToolStack offers 1,200 free, private online tools for PDF, image, text, developer utilities, and calculators.',
     category: 'all',
     keywords: [
       'free online tools',
@@ -352,9 +352,9 @@ export function getHomeSEOConfig(customOrigin?: string): PageSEOConfig {
     ],
     canonicalUrl,
     indexable: true,
-    h1: 'ToolStack – 1,200+ Free Online Web Tools & Utilities',
-    seoTitle: 'ToolStack - 1,200+ All-in-One Free Online Tools & Utilities',
-    seoDescription: 'Access 1,200+ free online tools for PDF merging, image compression, calculators, unit conversions, and developer utilities. 100% private, client-side, zero signup.',
+    h1: 'ToolStack – 1,200 Free Online Web Tools & Utilities',
+    seoTitle: 'ToolStack - 1,200 Free Online Tools & Utilities',
+    seoDescription: 'Access 1,200 free online tools for PDF merging, image compression, calculators, unit conversions, and dev utilities. 100% private, client-side, zero signup.',
     relatedTools: ['pdf-merge', 'pdf-compress', 'image-compressor', 'percentage-calculator'],
     structuredData
   };

@@ -83,7 +83,7 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search all 1,200+ utilities..."
+            placeholder="Search all 1,200 working utilities..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>

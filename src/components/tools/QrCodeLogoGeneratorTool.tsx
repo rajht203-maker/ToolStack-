@@ -385,7 +385,7 @@ export const QrCodeLogoGeneratorTool: React.FC<QrCodeLogoGeneratorProps> = ({ to
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {logoUrl ? (
                 <div className="relative w-20 h-20 rounded-2xl border-2 border-indigo-500 bg-slate-50 dark:bg-slate-800 p-2 flex items-center justify-center shrink-0 shadow-sm">
-                  <img src={logoUrl} alt="Center Logo" className="max-w-full max-h-full object-contain" />
+                  <img src={logoUrl} alt="Center Logo" width="64" height="64" className="max-w-full max-h-full object-contain" />
                   <button
                     onClick={() => setLogoUrl(null)}
                     className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-black shadow-md"

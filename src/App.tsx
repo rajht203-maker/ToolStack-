@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { BrowserRouter, useNavigate, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { ToolsProvider, useTools } from './context/ToolsContext';
@@ -27,6 +29,8 @@ import { recordToolClick } from './utils/toolAnalytics';
 import { Sparkles, Shield, Lock, X, ArrowLeft, LogIn } from 'lucide-react';
 
 function AppContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { isThemeModalOpen, closeThemeModal, openThemeModal } = useTheme();
   const { isAdmin, user, loading: authLoading } = useAuth();
   const { tools, categories, getToolBySlug: getToolBySlugDynamic, disabledTools } = useTools();
@@ -100,10 +104,10 @@ function AppContent() {
     return '';
   }, []);
 
-  // Route resolver: parses pathname, search params, 404 SPA redirects, or hash
+  // Route resolver: parses pathname, search params, direct tool slugs (e.g. /compress-pdf)
   const resolveRoute = useCallback(() => {
-    const pathname = window.location.pathname;
-    const searchParams = new URLSearchParams(window.location.search);
+    const pathname = location.pathname;
+    const searchParams = new URLSearchParams(location.search);
     const hash = window.location.hash.replace(/^#\/?/, '');
 
     // Check if redirected from GitHub Pages 404.html via ?p=...
@@ -118,27 +122,10 @@ function AppContent() {
     }
 
     if (!toolSlug) {
-      // Check /tools/[slug] or /calculators/[slug] anywhere in pathname
+      // Check /tools/[slug] or /calculators/[slug] in pathname
       const toolMatch = pathname.match(/(?:tools|calculators)\/([^/?#]+)/);
       if (toolMatch && toolMatch[1]) {
         toolSlug = toolMatch[1];
-      }
-    }
-
-    if (toolSlug) {
-      const found = getToolBySlugDynamic(toolSlug);
-      if (found) {
-        setActiveTool(found);
-        setNotFoundSlug(null);
-        setSelectedCategory(null);
-        setAdminPanelOpen(false);
-        return;
-      } else {
-        setNotFoundSlug(toolSlug);
-        setActiveTool(null);
-        setSelectedCategory(null);
-        setAdminPanelOpen(false);
-        return;
       }
     }
 
@@ -151,6 +138,8 @@ function AppContent() {
         setActiveTool(null);
         setNotFoundSlug(null);
         setAdminPanelOpen(false);
+        setPrivacyPolicyOpen(false);
+        setIsAdsTxt(false);
         return;
       }
     }
@@ -162,7 +151,9 @@ function AppContent() {
       setAdminPanelOpen(true);
       setActiveTool(null);
       setNotFoundSlug(null);
+      setSelectedCategory(null);
       setPrivacyPolicyOpen(false);
+      setIsAdsTxt(false);
       return;
     }
 
@@ -176,6 +167,7 @@ function AppContent() {
       setNotFoundSlug(null);
       setSelectedCategory(null);
       setAdminPanelOpen(false);
+      setIsAdsTxt(false);
       return;
     }
 
@@ -194,23 +186,45 @@ function AppContent() {
     }
     setIsAdsTxt(false);
 
+    // Check direct real URL paths: e.g. /compress-pdf, /image-resizer, /pdf-merge
+    if (!toolSlug) {
+      const trimmed = pathname.replace(/^\/+|\/+$/g, '');
+      if (trimmed && !trimmed.includes('/')) {
+        toolSlug = trimmed;
+      }
+    }
+
+    if (toolSlug) {
+      const found = getToolBySlugDynamic(toolSlug);
+      if (found) {
+        setActiveTool(found);
+        setNotFoundSlug(null);
+        setSelectedCategory(null);
+        setAdminPanelOpen(false);
+        setPrivacyPolicyOpen(false);
+        return;
+      } else {
+        setNotFoundSlug(toolSlug);
+        setActiveTool(null);
+        setSelectedCategory(null);
+        setAdminPanelOpen(false);
+        setPrivacyPolicyOpen(false);
+        return;
+      }
+    }
+
     // Default: home
     setActiveTool(null);
     setNotFoundSlug(null);
+    setSelectedCategory(null);
     setAdminPanelOpen(false);
     setPrivacyPolicyOpen(false);
-  }, [getToolBySlugDynamic, categories]);
+  }, [location.pathname, location.search, getToolBySlugDynamic, categories]);
 
-  // Initialize route on mount and listen to browser popstate
+  // Synchronize route whenever React Router location changes
   useEffect(() => {
     resolveRoute();
-
-    const handlePopState = () => {
-      resolveRoute();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [resolveRoute]);
 
   // Derive SEO metadata for the current view when not in an active tool (ToolView provides its own)
@@ -230,49 +244,28 @@ function AppContent() {
     return getHomeSEOConfig();
   }, [adminPanelOpen, selectedCategory, privacyPolicyOpen]);
 
-  // Sync activeTool with URL & Document Title & SEO meta tags
+  // Sync activeTool with URL via React Router navigate
   useEffect(() => {
-    const basePath = getBasePath();
-
     if (activeTool) {
-      const toolSubpath = activeTool.category === 'calculator' 
-        ? `/calculators/${activeTool.slug}` 
-        : `/tools/${activeTool.slug}`;
-      const newPath = `${basePath}${toolSubpath}`;
-
-      if (window.location.pathname !== newPath) {
-        window.history.pushState({ toolId: activeTool.id }, '', newPath);
+      const targetPath = `/${activeTool.slug}`;
+      if (location.pathname !== targetPath) {
+        navigate(targetPath, { replace: true });
       }
     } else if (privacyPolicyOpen) {
-      const newPath = `${basePath}/privacy-policy`;
-      if (window.location.pathname !== newPath) {
-        window.history.pushState({}, '', newPath);
+      if (location.pathname !== '/privacy-policy') {
+        navigate('/privacy-policy', { replace: true });
       }
     } else if (adminPanelOpen) {
-      const newPath = `${basePath}/admin`;
-      if (window.location.pathname !== newPath) {
-        window.history.pushState({}, '', newPath);
+      if (location.pathname !== '/admin') {
+        navigate('/admin', { replace: true });
       }
     } else if (selectedCategory) {
-      const newPath = `${basePath}/category/${selectedCategory}`;
-      if (window.location.pathname !== newPath) {
-        window.history.pushState({}, '', newPath);
-      }
-    } else if (!notFoundSlug) {
-      const homePath = basePath ? `${basePath}/` : '/';
-      const isSubRoute = window.location.pathname.includes('/tools/') || 
-                         window.location.pathname.includes('/calculators/') || 
-                         window.location.pathname.includes('/category/') ||
-                         window.location.pathname.includes('/admin') ||
-                         window.location.pathname.includes('/privacy-policy');
-      if (isSubRoute) {
-        window.history.pushState({}, '', homePath);
+      const catPath = `/category/${selectedCategory}`;
+      if (location.pathname !== catPath) {
+        navigate(catPath, { replace: true });
       }
     }
-
-    // Scroll to top upon page navigation
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeTool, adminPanelOpen, selectedCategory, notFoundSlug, privacyPolicyOpen, getBasePath]);
+  }, [activeTool, adminPanelOpen, selectedCategory, notFoundSlug, privacyPolicyOpen, location.pathname, navigate]);
 
   const handleGoHome = useCallback(() => {
     setActiveTool(null);
@@ -281,12 +274,8 @@ function AppContent() {
     setMemberOnlyFilter(false);
     setAdminPanelOpen(false);
     setPrivacyPolicyOpen(false);
-    const basePath = getBasePath();
-    const homePath = basePath ? `${basePath}/` : '/';
-    if (window.location.pathname !== homePath) {
-      window.history.pushState({}, '', homePath);
-    }
-  }, [getBasePath]);
+    navigate('/');
+  }, [navigate]);
 
   const handleOpenPrivacyPolicy = useCallback(() => {
     setPrivacyPolicyOpen(true);
@@ -294,13 +283,39 @@ function AppContent() {
     setSelectedCategory(null);
     setNotFoundSlug(null);
     setAdminPanelOpen(false);
-    const basePath = getBasePath();
-    const newPath = `${basePath}/privacy-policy`;
-    if (window.location.pathname !== newPath) {
-      window.history.pushState({}, '', newPath);
+    navigate('/privacy-policy');
+  }, [navigate]);
+
+  const handleOpenAdmin = useCallback(() => {
+    setAdminPanelOpen(true);
+    setActiveTool(null);
+    setSelectedCategory(null);
+    setNotFoundSlug(null);
+    setPrivacyPolicyOpen(false);
+    navigate('/admin');
+  }, [navigate]);
+
+  const handleSelectTool = useCallback((tool: ToolItem) => {
+    recordToolClick(tool.id);
+    setActiveTool(tool);
+    setNotFoundSlug(null);
+    setAdminPanelOpen(false);
+    setPrivacyPolicyOpen(false);
+    navigate(`/${tool.slug}`);
+  }, [navigate]);
+
+  const handleSelectCategory = useCallback((catId: string | null) => {
+    setSelectedCategory(catId);
+    setActiveTool(null);
+    setNotFoundSlug(null);
+    setAdminPanelOpen(false);
+    setPrivacyPolicyOpen(false);
+    if (catId) {
+      navigate(`/category/${catId}`);
+    } else {
+      navigate('/');
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [getBasePath]);
+  }, [navigate]);
 
   // Global Keyboard Shortcuts (Cmd+K or Ctrl+K for search, ? for cheat sheet, Esc to close)
   useEffect(() => {
@@ -382,27 +397,6 @@ function AppContent() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleGoHome, openThemeModal, closeThemeModal]);
 
-  const handleSelectTool = (tool: ToolItem) => {
-    recordToolClick(tool.id);
-    setActiveTool(tool);
-    setNotFoundSlug(null);
-    setAdminPanelOpen(false);
-    setPrivacyPolicyOpen(false);
-  };
-
-  const handleSelectCategory = (catId: string | null) => {
-    setSelectedCategory(catId);
-    setActiveTool(null);
-    setNotFoundSlug(null);
-    setAdminPanelOpen(false);
-    setPrivacyPolicyOpen(false);
-    const basePath = getBasePath();
-    const newPath = catId ? `${basePath}/category/${catId}` : (basePath ? `${basePath}/` : '/');
-    if (window.location.pathname !== newPath) {
-      window.history.pushState({}, '', newPath);
-    }
-  };
-
   if (isAdsTxt) {
     return (
       <pre className="m-0 p-4 font-mono text-sm text-black dark:text-white bg-white dark:bg-black whitespace-pre-wrap select-all">
@@ -422,7 +416,7 @@ function AppContent() {
             <div className="flex-1 flex items-center justify-center gap-2 font-medium">
               <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
               <span>
-                <strong>ToolStack 4.0:</strong> All 1,200+ utilities operate 100% inside your browser with zero data tracking.
+                <strong>ToolStack 4.0:</strong> All 1,200 utilities operate 100% inside your browser with zero data tracking.
               </span>
             </div>
             <button
@@ -666,12 +660,16 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <ToolsProvider>
-          <AppContent />
-        </ToolsProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <HelmetProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemeProvider>
+            <ToolsProvider>
+              <AppContent />
+            </ToolsProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </HelmetProvider>
   );
 }

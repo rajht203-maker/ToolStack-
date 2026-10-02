@@ -1,17 +1,5 @@
 # ToolStack Robots.txt - Search Engine Crawling Policy
-# Allow all standard search engine crawlers access to public tools & utilities
 User-agent: *
 Allow: /
-Allow: /tools/
-Allow: /calculators/
-Allow: /category/
 
-# Disallow administrative, authentication, and private endpoints
-Disallow: /admin/
-Disallow: /admin
-Disallow: /dashboard/
-Disallow: /login/
-Disallow: /api/
-
-# Sitemap location
 Sitemap: https://toolstack-eosin.vercel.app/sitemap.xml

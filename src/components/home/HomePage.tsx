@@ -15,6 +15,7 @@ import {
   resetToolClickCounts, 
   TOOL_CLICK_EVENT 
 } from '../../utils/toolAnalytics';
+import { HomeHelmetSEO } from '../seo/HomeHelmetSEO';
 import { 
   Search, 
   Sparkles, 
@@ -129,6 +130,9 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="space-y-12 pb-16">
+      {/* Homepage SEO & Structured Data */}
+      <HomeHelmetSEO toolCount={activeTools.length} />
+
       {/* Hero Section with Problem Solver Bar */}
       <section className="relative overflow-hidden pt-10 sm:pt-14 pb-8 text-center px-4">
         {/* Subtle background glow */}
@@ -137,7 +141,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         <div className="relative max-w-4xl mx-auto space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-widest shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-            <span>{activeTools.length}+ Working Utilities • Local In-Browser Processing</span>
+            <span>{activeTools.length} Working Tools • Local In-Browser Processing</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-slate-900 dark:text-white">
@@ -161,7 +165,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               { name: 'JSON Formatter', slug: 'json-formatter', category: 'developer' },
               { name: 'Word Counter', slug: 'word-counter', category: 'text' }
             ].map((t) => {
-              const href = t.category === 'calculator' ? `/calculators/${t.slug}` : `/tools/${t.slug}`;
+              const href = `/${t.slug}`;
               return (
                 <a
                   key={t.slug}
@@ -245,7 +249,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </span>
             <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
               <Zap className="w-4 h-4 text-amber-500" />
-              {activeTools.length}+ Working Utilities
+              {activeTools.length} Working Tools
             </span>
             {/* Custom Tools Theme Pill */}
             <button

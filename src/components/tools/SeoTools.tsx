@@ -515,6 +515,8 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ tool, onSuccess }) => {
               <img
                 src={metaImage}
                 alt="Social preview"
+                width="448"
+                height="176"
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   // Fallback visual

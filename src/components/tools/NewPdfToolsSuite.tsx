@@ -1757,7 +1757,7 @@ export const NewPdfToolsSuite: React.FC<NewPdfToolsSuiteProps> = ({ tool, onSucc
               {extractedImages.map((img) => (
                 <div key={img.id} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2 text-center group">
                   <div className="h-28 bg-white dark:bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center p-1 border border-slate-100 dark:border-slate-800">
-                    <img src={img.url} alt={img.name} className="max-h-full max-w-full object-contain" />
+                    <img src={img.url} alt={img.name} width="160" height="112" className="max-h-full max-w-full object-contain" />
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate" title={img.name}>

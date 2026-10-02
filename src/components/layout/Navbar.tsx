@@ -235,7 +235,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center overflow-hidden">
                   {user.photoURL ? (
-                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={user.photoURL} alt="Avatar" width="32" height="32" className="w-full h-full object-cover" />
                   ) : (
                     (user.displayName || user.email || 'U').charAt(0).toUpperCase()
                   )}

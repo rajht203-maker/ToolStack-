@@ -727,7 +727,7 @@ export const MemberExclusiveToolsSuite: React.FC<MemberSuiteProps> = ({ tool, on
                   </a>
                 </div>
                 <div className="flex justify-center max-h-[360px] overflow-hidden rounded-xl bg-white dark:bg-slate-900 p-2">
-                  <img src={processedImageUrl} alt="Processed output" className="max-h-[340px] object-contain rounded-lg shadow-xs" />
+                  <img src={processedImageUrl} alt="Processed output" width="480" height="340" className="max-h-[340px] object-contain rounded-lg shadow-xs" />
                 </div>
               </div>
             )}
@@ -851,7 +851,7 @@ export const MemberExclusiveToolsSuite: React.FC<MemberSuiteProps> = ({ tool, on
           {qrCodeUrl && (
             <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 flex flex-col sm:flex-row items-center gap-4">
               <div className="p-3 bg-white rounded-2xl shadow-sm">
-                <img src={qrCodeUrl} alt="WiFi QR Code" className="w-40 h-40" />
+                <img src={qrCodeUrl} alt="WiFi QR Code" width="160" height="160" className="w-40 h-40" />
               </div>
               <div className="space-y-2 text-center sm:text-left">
                 <span className="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-bold uppercase">

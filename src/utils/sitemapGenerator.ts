@@ -45,11 +45,10 @@ export function getAllSitemapURLs(customOrigin?: string): SitemapURLItem[] {
     addUrl(`${origin}${basePath}/category/${cat.id}`, 'weekly', '0.8');
   }
 
-  // 4. Individual Tool Pages (All 1,200+ public tools)
+  // 4. Individual Tool Pages (All 1,200 public tools)
   for (const tool of TOOLS_DATA) {
-    const subpath = tool.category === 'calculator' 
-      ? `/calculators/${tool.slug}` 
-      : `/tools/${tool.slug}`;
+    // Real URL path for every tool (e.g. /compress-pdf, /image-resizer)
+    const subpath = `/${tool.slug}`;
 
     // Popular/Trending tools get higher priority in Google crawl budget
     const isHighPriority = tool.popular || tool.trending || tool.badge === 'Popular';
@@ -81,7 +80,7 @@ ${xmlEntries}
 }
 
 /**
- * Generate robots.txt content with dynamic origin support
+ * Generate robots.txt content with dynamic origin support (allows all and points to sitemap)
  */
 export function generateRobotsTxt(customOrigin?: string): string {
   const origin = customOrigin || getSiteOrigin();
@@ -89,21 +88,9 @@ export function generateRobotsTxt(customOrigin?: string): string {
   const sitemapUrl = `${origin}${basePath}/sitemap.xml`;
 
   return `# ToolStack Robots.txt - Search Engine Crawling Policy
-# Allow all standard search engine crawlers access to public tools & utilities
 User-agent: *
 Allow: /
-Allow: /tools/
-Allow: /calculators/
-Allow: /category/
 
-# Disallow administrative, authentication, and private endpoints
-Disallow: /admin/
-Disallow: /admin
-Disallow: /dashboard/
-Disallow: /login/
-Disallow: /api/
-
-# Sitemap location
 Sitemap: ${sitemapUrl}
 `;
 }

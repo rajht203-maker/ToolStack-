@@ -1096,7 +1096,7 @@ export const PublicUtilityTools: React.FC<PublicUtilityToolsProps> = ({ tool, on
 
           <div className="p-6 bg-slate-50 dark:bg-slate-900 border rounded-2xl flex flex-col items-center justify-center gap-3">
             <div className="text-xs font-bold uppercase text-slate-400">Decoded Image Render</div>
-            <img src={base64Uri} alt="Decoded preview" className="max-h-48 rounded-xl border shadow-sm object-contain" />
+            <img src={base64Uri} alt="Decoded preview" width="300" height="200" className="max-h-48 rounded-xl border shadow-sm object-contain" />
           </div>
         </div>
       )}

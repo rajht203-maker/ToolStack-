@@ -160,11 +160,36 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const overriddenToolIds = useMemo(() => Object.keys(toolOverrides), [toolOverrides]);
 
-  // Lookup tools by slug or id
+  // Lookup tools by slug or id (with hyphen/alias matching)
   const getToolBySlug = useCallback((slug: string): ToolItem | undefined => {
     if (!slug) return undefined;
     const cleanSlug = slug.toLowerCase().trim();
-    return tools.find(t => t.slug.toLowerCase() === cleanSlug || t.id.toLowerCase() === cleanSlug);
+    const direct = tools.find(t => t.slug.toLowerCase() === cleanSlug || t.id.toLowerCase() === cleanSlug);
+    if (direct) return direct;
+
+    const aliasMap: Record<string, string> = {
+      'compress-pdf': 'pdf-compress',
+      'merge-pdf': 'pdf-merge',
+      'split-pdf': 'pdf-split',
+      'resize-image': 'image-resizer',
+      'compress-image': 'image-compressor',
+    };
+    if (aliasMap[cleanSlug]) {
+      const target = aliasMap[cleanSlug];
+      const match = tools.find(t => t.slug.toLowerCase() === target || t.id.toLowerCase() === target);
+      if (match) return match;
+    }
+
+    if (cleanSlug.includes('-')) {
+      const parts = cleanSlug.split('-');
+      if (parts.length === 2) {
+        const rev = `${parts[1]}-${parts[0]}`;
+        const revMatch = tools.find(t => t.slug.toLowerCase() === rev || t.id.toLowerCase() === rev);
+        if (revMatch) return revMatch;
+      }
+    }
+
+    return undefined;
   }, [tools]);
 
   const getToolById = useCallback((id: string): ToolItem | undefined => {

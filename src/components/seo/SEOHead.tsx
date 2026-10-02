@@ -58,7 +58,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({ config }) => {
 
     // 5. OpenGraph Tags
     const siteOrigin = getSiteOrigin();
-    const defaultImage = `${siteOrigin}/apple-touch-icon.png`;
+    const defaultImage = `${siteOrigin}/og-image.png`;
 
     updateMetaTag('property', 'og:title', config.seoTitle);
     updateMetaTag('property', 'og:description', config.seoDescription);

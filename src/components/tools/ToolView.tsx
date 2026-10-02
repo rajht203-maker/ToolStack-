@@ -10,8 +10,9 @@ import { InFeedAd } from '../ads/InFeedAd';
 import { getRelatedTools, CATEGORIES } from '../../data/toolsData';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { SEOHead } from '../seo/SEOHead';
-import { getToolSEOConfig } from '../../utils/seoConfig';
+import { useTools } from '../../context/ToolsContext';
+import { ToolHelmetSEO } from '../seo/ToolHelmetSEO';
+import { getCompleteToolSEO } from '../../utils/toolSEOData';
 import { 
   ChevronRight, 
   Heart, 
@@ -183,6 +184,7 @@ export const ToolView: React.FC<ToolViewProps> = ({
   onSelectCategory,
   onOpenAuth
 }) => {
+  const { tools: allRegisteredTools } = useTools();
   const { user, isFavorite, toggleFavorite, addHistory } = useAuth();
   const { openThemeModal, activeColors } = useTheme();
   const favorited = isFavorite(tool.id);
@@ -191,13 +193,11 @@ export const ToolView: React.FC<ToolViewProps> = ({
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const shareRef = useRef<HTMLDivElement>(null);
 
-  const relatedTools = getRelatedTools(tool);
+  const seoData = useMemo(() => getCompleteToolSEO(tool, allRegisteredTools), [tool, allRegisteredTools]);
+  const relatedTools = seoData.relatedTools;
   const categoryInfo = CATEGORIES.find(c => c.id === tool.category);
 
-  // Dynamic SEO configuration for this tool
-  const seoConfig = useMemo(() => getToolSEOConfig(tool), [tool]);
-
-  // Derive canonical direct permalink for this tool
+  // Derive canonical direct permalink for this tool (e.g. /compress-pdf)
   const getPermalink = (toolItem: ToolItem): string => {
     if (typeof window === 'undefined') return '';
     const origin = window.location.origin;
@@ -208,9 +208,7 @@ export const ToolView: React.FC<ToolViewProps> = ({
         basePath = `/${segments[0]}`;
       }
     }
-    const subpath = toolItem.category === 'calculator' 
-      ? `/calculators/${toolItem.slug}` 
-      : `/tools/${toolItem.slug}`;
+    const subpath = `/${toolItem.slug}`;
     return `${origin}${basePath}${subpath}`;
   };
 
@@ -345,8 +343,8 @@ export const ToolView: React.FC<ToolViewProps> = ({
 
   return (
     <article className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8 animate-in fade-in duration-200">
-      {/* Dynamic SEO & Social Head Metadata Injection */}
-      <SEOHead config={seoConfig} />
+      {/* Dynamic Helmet SEO & Social Head Metadata Injection */}
+      <ToolHelmetSEO tool={tool} allTools={allRegisteredTools} />
 
       {/* Toast Notification */}
       {successToast && (
@@ -458,8 +456,8 @@ export const ToolView: React.FC<ToolViewProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
-                {tool.description}
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed font-medium pt-1">
+                {seoData.explanation}
               </p>
 
               {/* Useful Contextual Internal Linking between Related Tools */}
@@ -469,9 +467,7 @@ export const ToolView: React.FC<ToolViewProps> = ({
                     Paired Tools:
                   </span>
                   {relatedTools.slice(0, 3).map((rel) => {
-                    const relPath = rel.category === 'calculator' 
-                      ? `/calculators/${rel.slug}` 
-                      : `/tools/${rel.slug}`;
+                    const relPath = `/${rel.slug}`;
                     return (
                       <a
                         key={rel.id}
@@ -734,7 +730,7 @@ export const ToolView: React.FC<ToolViewProps> = ({
             </h3>
           </div>
           <ol className="space-y-2.5">
-            {getDynamicHowToWork(tool).map((step, idx) => (
+            {seoData.howToUse.map((step, idx) => (
               <li key={idx} className="flex items-start gap-3 text-xs text-slate-600 dark:text-slate-300">
                 <span className="w-5 h-5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center shrink-0 text-[10px]">
                   {idx + 1}
@@ -745,29 +741,27 @@ export const ToolView: React.FC<ToolViewProps> = ({
           </ol>
         </div>
 
-        {/* FAQs - Rendered only when visible FAQs exist, exactly matching JSON-LD Schema */}
-        {tool.faqs && tool.faqs.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
-            <div className="flex items-center gap-2">
-              <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
-                Frequently Asked Questions
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {tool.faqs.map((faq, idx) => (
-                <div key={idx} className="space-y-1 text-xs">
-                  <div className="font-semibold text-slate-800 dark:text-slate-200">
-                    {faq.question}
-                  </div>
-                  <div className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                    {faq.answer}
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* FAQs - Guaranteed 3 questions matching FAQPage JSON-LD Schema */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
+              Frequently Asked Questions
+            </h3>
           </div>
-        )}
+          <div className="space-y-3">
+            {seoData.faqs.map((faq, idx) => (
+              <div key={idx} className="space-y-1 text-xs">
+                <div className="font-semibold text-slate-800 dark:text-slate-200">
+                  {faq.question}
+                </div>
+                <div className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                  {faq.answer}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Key Benefits & Practical Everyday Examples */}

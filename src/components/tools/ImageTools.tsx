@@ -360,7 +360,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ tool, onSuccess }) => {
                     Original Image ({(fileSize / 1024).toFixed(1)} KB)
                   </div>
                   <div className="aspect-video bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center">
-                    <img src={selectedImage} alt="Original" className="max-h-full object-contain" />
+                    <img src={selectedImage} alt="Original" width="480" height="270" className="max-h-full object-contain" />
                   </div>
                 </div>
 
@@ -376,7 +376,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ tool, onSuccess }) => {
                   </div>
                   <div className="aspect-video bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center">
                     {compressedUrl ? (
-                      <img src={compressedUrl} alt="Compressed" className="max-h-full object-contain" />
+                      <img src={compressedUrl} alt="Compressed" width="480" height="270" className="max-h-full object-contain" />
                     ) : (
                       <div className="text-xs text-slate-400 text-center px-4">
                         Adjust slider and click "Compress Image" to preview
@@ -535,7 +535,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ tool, onSuccess }) => {
                     </a>
                   </div>
                   <div className="max-h-80 bg-slate-100 dark:bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center p-2">
-                    <img src={resizedUrl} alt="Resized output" className="max-h-full max-w-full object-contain" />
+                    <img src={resizedUrl} alt="Resized output" width="400" height="300" className="max-h-full max-w-full object-contain" />
                   </div>
                 </div>
               )}
@@ -669,7 +669,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ tool, onSuccess }) => {
               <span className="text-xs font-medium text-slate-500 block mb-2">Simulated Browser Tab</span>
               <div className="inline-flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-t-lg shadow-sm border border-b-0 border-slate-300 dark:border-slate-700">
                 {selectedImage ? (
-                  <img src={selectedImage} alt="Favicon preview" className="w-4 h-4 rounded object-cover" />
+                  <img src={selectedImage} alt="Favicon preview" width="16" height="16" className="w-4 h-4 rounded object-cover" />
                 ) : (
                   <span className="text-sm">{faviconEmoji}</span>
                 )}
@@ -831,7 +831,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ tool, onSuccess }) => {
             {qrResultUrl ? (
               <>
                 <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 inline-block">
-                  <img src={qrResultUrl} alt="Generated QR Code" className="w-48 h-48 rounded-lg" />
+                  <img src={qrResultUrl} alt="Generated QR Code" width="192" height="192" className="w-48 h-48 rounded-lg" />
                 </div>
                 <div className="flex gap-3 w-full max-w-xs">
                   <a
