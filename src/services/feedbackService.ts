@@ -31,11 +31,11 @@ export interface SubmitFeedbackParams {
 export async function submitToolFeedback(params: SubmitFeedbackParams): Promise<ToolFeedback> {
   const collectionPath = 'tool_feedback';
   const feedbackId = `fb_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  const currentUser = auth.currentUser;
   
-  const userId = currentUser?.uid || params.userId || 'guest';
-  const userEmail = currentUser?.email || params.userEmail || (userId === 'guest' ? 'guest@toolstack.local' : '');
-  const userName = currentUser?.displayName || params.userName || (userId === 'guest' ? 'Community Guest' : 'Anonymous Member');
+  // Privacy-first: NEVER silently harvest currentUser?.email or displayName without explicit consent
+  const userEmail = params.userEmail ? params.userEmail.trim().slice(0, 256) : '';
+  const userName = params.userName ? params.userName.trim().slice(0, 128) : 'Anonymous Member';
+  const userId = userEmail ? (auth.currentUser?.uid || params.userId || 'member') : 'anonymous';
   const nowIso = new Date().toISOString();
 
   // Sanitize and trim comment to declared blueprint constraint (1,000 chars)
@@ -51,8 +51,8 @@ export async function submitToolFeedback(params: SubmitFeedbackParams): Promise<
     type: params.type,
     comment: sanitizedComment,
     userId,
-    userEmail: userEmail.slice(0, 256),
-    userName: userName.slice(0, 128),
+    userEmail,
+    userName,
     status: 'pending',
     createdAt: nowIso,
   };
@@ -72,7 +72,7 @@ export async function submitToolFeedback(params: SubmitFeedbackParams): Promise<
 }
 
 /**
- * Get feedback entries for a specific tool
+ * Get feedback entries for a specific tool (privacy-protected)
  */
 export async function getToolFeedback(toolId: string, maxEntries: number = 30): Promise<ToolFeedback[]> {
   const collectionPath = 'tool_feedback';
@@ -86,7 +86,13 @@ export async function getToolFeedback(toolId: string, maxEntries: number = 30): 
     const list: ToolFeedback[] = [];
     snap.forEach((d) => {
       const data = d.data() as ToolFeedback;
-      list.push({ ...data, id: d.id });
+      // Strip user email and mask any raw email names to guarantee visitor privacy
+      list.push({
+        ...data,
+        id: d.id,
+        userEmail: '', // Never expose email to public clients
+        userName: (data.userName && !data.userName.includes('@')) ? data.userName : 'Community Member'
+      });
     });
     // Sort in memory by createdAt descending
     return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -101,7 +107,7 @@ export async function getToolFeedback(toolId: string, maxEntries: number = 30): 
 }
 
 /**
- * Subscribe to real-time feedback updates for a tool
+ * Subscribe to real-time feedback updates for a tool (privacy-protected)
  */
 export function subscribeToToolFeedback(
   toolId: string, 
@@ -121,7 +127,13 @@ export function subscribeToToolFeedback(
         const list: ToolFeedback[] = [];
         snapshot.forEach((d) => {
           const data = d.data() as ToolFeedback;
-          list.push({ ...data, id: d.id });
+          // Privacy protection: strip emails and sanitize names
+          list.push({
+            ...data,
+            id: d.id,
+            userEmail: '', // Never expose email in public feed
+            userName: (data.userName && !data.userName.includes('@')) ? data.userName : 'Community Member'
+          });
         });
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         callback(list);

@@ -28,7 +28,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onGoHome }
 
   const lastUpdated = 'September 24, 2026';
   const siteUrl = 'https://toolstack-eosin.vercel.app';
-  const contactEmail = 'rajht203@gmail.com';
+  const contactEmail = 'privacy@toolstack.app';
   const publisherId = 'ca-pub-9951412841260181';
 
   return (

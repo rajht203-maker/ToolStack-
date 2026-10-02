@@ -26,6 +26,7 @@ import { getToolBySlug, TOOLS_DATA, CATEGORIES } from './data/toolsData';
 import { getHomeSEOConfig, getCategorySEOConfig, getAdminSEOConfig, getPrivacyPolicySEOConfig } from './utils/seoConfig';
 import { ToolItem } from './types';
 import { recordToolClick } from './utils/toolAnalytics';
+import { maskEmail } from './utils/privacy';
 import { Sparkles, Shield, Lock, X, ArrowLeft, LogIn } from 'lucide-react';
 
 function AppContent() {
@@ -527,7 +528,7 @@ function AppContent() {
                       {user && (
                         <div className="pt-2">
                           <span className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium">
-                            Signed in as: <strong className="text-slate-900 dark:text-white">{user.email}</strong> (Standard Member)
+                            Signed in as: <strong className="text-slate-900 dark:text-white">{maskEmail(user.email)}</strong> (Standard Member)
                           </span>
                         </div>
                       )}

@@ -16,11 +16,15 @@ import {
   Menu,
   PanelLeft,
   HelpCircle,
-  Palette
+  Palette,
+  Eye,
+  EyeOff,
+  ShieldCheck
 } from 'lucide-react';
 import { CATEGORIES as DEFAULT_CATEGORIES, TOOLS_DATA as DEFAULT_TOOLS_DATA } from '../../data/toolsData';
 import { useTools } from '../../context/ToolsContext';
 import { PWAInstallButton } from '../common/PWAInstallButton';
+import { maskEmail, maskName, isPrivacyModeEnabled, setPrivacyMode } from '../../utils/privacy';
 
 interface NavbarProps {
   onOpenSearch: () => void;
@@ -58,6 +62,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
+  const [privacyMasked, setPrivacyMasked] = useState<boolean>(() => isPrivacyModeEnabled());
+
+  const togglePrivacy = () => {
+    const next = !privacyMasked;
+    setPrivacyMasked(next);
+    setPrivacyMode(next);
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md transition-colors">
@@ -249,12 +260,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="fixed inset-0 z-30"
                     onClick={() => setProfileDropdownOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl p-2 z-40 space-y-1">
-                    <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700/60">
-                      <div className="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate">
-                        {user.displayName || 'ToolStack User'}
+                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl p-2 z-40 space-y-1">
+                    <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+                      <div className="min-w-0 pr-2">
+                        <div className="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate">
+                          {privacyMasked ? maskName(user.displayName) : (user.displayName || 'ToolStack User')}
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono truncate">
+                          {privacyMasked ? maskEmail(user.email) : user.email}
+                        </div>
                       </div>
-                      <div className="text-[11px] text-slate-400 truncate">{user.email}</div>
+                      <button
+                        type="button"
+                        onClick={togglePrivacy}
+                        className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors shrink-0"
+                        title={privacyMasked ? "Click to reveal your email on screen" : "Click to mask your email (Privacy Shield)"}
+                      >
+                        {privacyMasked ? <EyeOff className="w-4 h-4 text-indigo-500" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
 
                     {onOpenProfile && (

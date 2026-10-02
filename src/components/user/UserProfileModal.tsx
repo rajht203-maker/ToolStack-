@@ -17,8 +17,12 @@ import {
   ExternalLink,
   ShieldCheck,
   Zap,
-  Sliders
+  Sliders,
+  Eye,
+  EyeOff,
+  Lock
 } from 'lucide-react';
+import { maskEmail, maskName, isPrivacyModeEnabled, setPrivacyMode } from '../../utils/privacy';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -49,6 +53,13 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const [displayName, setDisplayName] = useState(profile?.displayName || user?.displayName || 'ToolStack User');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [privacyMasked, setPrivacyMasked] = useState<boolean>(() => isPrivacyModeEnabled());
+
+  const togglePrivacy = () => {
+    const next = !privacyMasked;
+    setPrivacyMasked(next);
+    setPrivacyMode(next);
+  };
 
   if (!isOpen || !user) return null;
 
@@ -117,9 +128,17 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   </span>
                 )}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {user.email}
-              </p>
+              <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-mono">
+                <span>{privacyMasked ? maskEmail(user.email) : user.email}</span>
+                <button
+                  type="button"
+                  onClick={togglePrivacy}
+                  className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  title={privacyMasked ? "Reveal full email" : "Mask email address"}
+                >
+                  {privacyMasked ? <EyeOff className="w-3.5 h-3.5 text-indigo-500" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
           </div>
           <button
@@ -216,7 +235,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     ) : (
                       <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
                         <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                          {profile?.displayName || user.displayName || 'ToolStack User'}
+                          {privacyMasked ? maskName(profile?.displayName || user.displayName) : (profile?.displayName || user.displayName || 'ToolStack User')}
                         </span>
                         <button
                           onClick={() => setEditingName(true)}
@@ -229,12 +248,22 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
-                      <span className="block text-[10px] uppercase font-bold text-slate-400">Email Address</span>
-                      <span className="text-xs font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mt-0.5 truncate">
-                        <Mail className="w-3 h-3 text-slate-400 shrink-0" />
-                        {user.email}
-                      </span>
+                    <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                      <div className="min-w-0 pr-2">
+                        <span className="block text-[10px] uppercase font-bold text-slate-400">Email Address (Protected)</span>
+                        <span className="text-xs font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mt-0.5 truncate font-mono">
+                          <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                          {privacyMasked ? maskEmail(user.email) : user.email}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={togglePrivacy}
+                        className="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+                      >
+                        {privacyMasked ? <EyeOff className="w-3 h-3 text-indigo-500" /> : <Eye className="w-3 h-3" />}
+                        <span>{privacyMasked ? 'Masked' : 'Revealed'}</span>
+                      </button>
                     </div>
 
                     <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -244,6 +273,22 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                         {isAdmin ? 'System Administrator' : 'Standard Member'}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Strict Account Privacy Protection Banner */}
+                  <div className="p-4 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-xs text-emerald-900 dark:text-emerald-300">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                        <span>Strict Identity Privacy Protection Active</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-200/80 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
+                        Guaranteed
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      ToolStack will never display your email or personal name to other visitors, never autofill your contact details without your permission, and all feedback is submitted anonymously by default.
+                    </p>
                   </div>
 
                   <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">

@@ -16,7 +16,10 @@ import {
   AlertCircle, 
   Search,
   Check,
-  RefreshCw
+  RefreshCw,
+  ShieldCheck,
+  Lock,
+  EyeOff
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -40,13 +43,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('improvement');
   const [rating, setRating] = useState<number>(5);
   const [comment, setComment] = useState('');
+  const [keepPrivate, setKeepPrivate] = useState<boolean>(true);
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Sync currentTool when modal opens
+  // Sync currentTool when modal opens (DO NOT autofill user email or name - respect user privacy)
   useEffect(() => {
     if (isOpen) {
       if (currentTool) {
@@ -54,14 +58,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       } else {
         setSelectedToolId('general');
       }
-      if (user) {
-        setUserEmail(user.email || '');
-        setUserName(user.displayName || '');
-      }
+      // Keep private by default; do NOT auto-populate personal identity
+      setKeepPrivate(true);
+      setUserEmail('');
+      setUserName('');
       setIsSubmitted(false);
       setErrorMessage(null);
     }
-  }, [isOpen, currentTool, user]);
+  }, [isOpen, currentTool]);
 
   if (!isOpen) return null;
 
@@ -80,6 +84,12 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
     try {
       const feedbackId = `fb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      
+      // When keepPrivate is true (default), absolutely NO email, name, or userId is attached
+      const finalEmail = keepPrivate ? '' : userEmail.trim();
+      const finalName = keepPrivate ? 'Anonymous Member' : (userName.trim() || 'Community Member');
+      const finalUserId = keepPrivate ? 'anonymous' : (user?.uid || 'guest');
+
       const feedbackDoc = {
         feedbackId,
         toolId: selectedToolId || 'general',
@@ -88,9 +98,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         type: feedbackType,
         comment: comment.trim(),
         status: 'pending',
-        userId: user?.uid || 'guest',
-        userEmail: userEmail.trim() || user?.email || '',
-        userName: userName.trim() || user?.displayName || 'Visitor',
+        userId: finalUserId,
+        userEmail: finalEmail,
+        userName: finalName,
+        isPrivate: keepPrivate,
         createdAt: new Date().toISOString()
       };
 
@@ -279,32 +290,96 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 />
               </div>
 
-              {/* User Email & Name (Optional) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
-                    Your Email <span className="font-normal text-slate-400">(Optional for replies)</span>
+              {/* Privacy Shield Protection Card */}
+              <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>100% Private &amp; Anonymous</span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                          Active
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Your identity, email, and name are protected and will never be shown to anyone.
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0" title="Toggle Anonymous Submission">
+                    <input
+                      type="checkbox"
+                      checked={keepPrivate}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setKeepPrivate(val);
+                        if (val) {
+                          setUserEmail('');
+                          setUserName('');
+                        }
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                   </label>
-                  <input
-                    type="email"
-                    value={userEmail}
-                    onChange={(e) => setUserEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white outline-hidden"
-                  />
                 </div>
-                <div>
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
-                    Your Name <span className="font-normal text-slate-400">(Optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    placeholder="e.g. Alex"
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white outline-hidden"
-                  />
-                </div>
+
+                {keepPrivate ? (
+                  <div className="pt-2 border-t border-indigo-100/80 dark:border-indigo-900/40 flex items-center gap-2 text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                    <Lock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Submitting anonymously. No personal name or email address will be transmitted or stored.</span>
+                  </div>
+                ) : (
+                  <div className="pt-3 border-t border-indigo-100 dark:border-indigo-900/60 space-y-3 animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+                        Optional: Enter contact details if you would like an email reply.
+                      </span>
+                      {user && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserEmail(user.email || '');
+                            setUserName(user.displayName || '');
+                          }}
+                          className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                        >
+                          Use my signed-in info
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                          Your Email (Optional)
+                        </label>
+                        <input
+                          type="email"
+                          value={userEmail}
+                          onChange={(e) => setUserEmail(e.target.value)}
+                          placeholder="name@example.com"
+                          className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                          Your Name (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={userName}
+                          onChange={(e) => setUserName(e.target.value)}
+                          placeholder="e.g. Alex"
+                          className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {errorMessage && (

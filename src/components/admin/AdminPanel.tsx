@@ -37,8 +37,10 @@ import {
   Globe,
   Plus,
   Pencil,
-  RotateCcw
+  RotateCcw,
+  EyeOff
 } from 'lucide-react';
+import { maskEmail, maskName, isPrivacyModeEnabled, setPrivacyMode } from '../../utils/privacy';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { getAllFeedback, updateFeedbackStatus, deleteFeedbackItem } from '../../services/feedbackService';
@@ -120,6 +122,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
   const [feedbackTypeFilter, setFeedbackTypeFilter] = useState<'all' | FeedbackType>('all');
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<'all' | 'pending' | 'reviewed' | 'resolved'>('all');
   const [feedbackSearch, setFeedbackSearch] = useState('');
+
+  const [privacyMasked, setPrivacyMasked] = useState<boolean>(isPrivacyModeEnabled);
+
+  useEffect(() => {
+    const handlePrivacyChange = () => {
+      setPrivacyMasked(isPrivacyModeEnabled());
+    };
+    window.addEventListener('toolstack_privacy_change', handlePrivacyChange);
+    return () => {
+      window.removeEventListener('toolstack_privacy_change', handlePrivacyChange);
+    };
+  }, []);
+
+  const togglePrivacy = () => {
+    const next = !privacyMasked;
+    setPrivacyMasked(next);
+    setPrivacyMode(next);
+  };
 
   const userCleanEmail = (user?.email || '').trim().toLowerCase();
   const isAuthorized = Boolean(
@@ -439,9 +459,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
                 MASTER ROOT
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Authorized session: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{user?.email}</span>
-            </p>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex flex-wrap items-center gap-2">
+              <span>Authorized session: <strong className="font-semibold text-indigo-600 dark:text-indigo-400 font-mono">{privacyMasked ? maskEmail(user?.email) : user?.email}</strong></span>
+              <button
+                type="button"
+                onClick={togglePrivacy}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+                title={privacyMasked ? "Click to reveal unmasked details" : "Click to mask personal details (Privacy Shield)"}
+              >
+                {privacyMasked ? <EyeOff className="w-3 h-3 text-indigo-500" /> : <Eye className="w-3 h-3" />}
+                <span>{privacyMasked ? 'Privacy Shield Active' : 'Shield Off'}</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -747,7 +776,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
                               </div>
                               <div>
                                 <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                  {u.displayName || 'Anonymous User'}
+                                  {privacyMasked ? maskName(u.displayName) : (u.displayName || 'Anonymous User')}
                                   {isCurrentUser && (
                                     <span className="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 font-bold">
                                       YOU
@@ -755,7 +784,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
                                   )}
                                 </div>
                                 <div className="text-[11px] text-slate-400 font-mono">
-                                  {u.email}
+                                  {privacyMasked ? maskEmail(u.email) : u.email}
                                 </div>
                               </div>
                             </div>
@@ -1332,10 +1361,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose, onSelectTool })
                       {/* Footer: User Identity, Status Controls, Actions */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-700/60 text-xs">
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                          <span className="font-semibold text-slate-700 dark:text-slate-300">By: {item.userName || 'Guest'}</span>
-                          {item.userEmail && <span>({item.userEmail})</span>}
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">
+                            By: {privacyMasked ? maskName(item.userName) : (item.userName || 'Guest')}
+                          </span>
+                          {item.userEmail && (
+                            <span className="font-mono">({privacyMasked ? maskEmail(item.userEmail) : item.userEmail})</span>
+                          )}
                           <span className="text-slate-300 dark:text-slate-600">•</span>
-                          <span className="font-mono text-[10px] text-slate-400">{item.userId}</span>
+                          <span className="font-mono text-[10px] text-slate-400">
+                            {privacyMasked ? 'id-protected' : item.userId}
+                          </span>
                         </div>
 
                         <div className="flex items-center gap-2">

@@ -12,11 +12,14 @@ import {
   Sparkles,
   RefreshCw,
   Filter,
-  Check
+  Check,
+  ShieldCheck,
+  Lock
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ToolItem, ToolFeedback, FeedbackType } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { maskEmail, maskName } from '../../utils/privacy';
 import { 
   submitToolFeedback, 
   subscribeToToolFeedback 
@@ -40,8 +43,8 @@ export const ToolFeedbackComponent: React.FC<ToolFeedbackComponentProps> = ({
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('rating');
   const [comment, setComment] = useState<string>('');
+  const [keepAnonymous, setKeepAnonymous] = useState<boolean>(true);
   const [guestName, setGuestName] = useState<string>('');
-  const [guestEmail, setGuestEmail] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -114,15 +117,19 @@ export const ToolFeedbackComponent: React.FC<ToolFeedbackComponentProps> = ({
     setSubmitError(null);
 
     try {
+      const finalUserName = keepAnonymous
+        ? 'Anonymous Member'
+        : (guestName.trim() || 'Community Contributor');
+
       await submitToolFeedback({
         toolId: tool.id,
         toolName: tool.name,
         rating,
         type: feedbackType,
         comment: comment.trim(),
-        userId: user?.uid || 'guest',
-        userEmail: user?.email || guestEmail.trim(),
-        userName: user?.displayName || guestName.trim() || (user ? 'Verified Member' : 'Community Guest')
+        userId: 'anonymous',
+        userEmail: '', // Completely private: no email is ever stored or exposed in tool feedback
+        userName: finalUserName
       });
 
       setSubmitSuccess(true);
@@ -371,45 +378,51 @@ export const ToolFeedbackComponent: React.FC<ToolFeedbackComponentProps> = ({
             />
           </div>
 
-          {/* Row 4: Author Identity */}
-          <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
-                {user ? (user.displayName?.[0] || user.email?.[0] || 'U').toUpperCase() : <UserIcon className="w-4 h-4" />}
-              </div>
-              <div className="space-y-0.5">
-                <div className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <span>{user ? (user.displayName || user.email) : 'Community Guest'}</span>
-                  {user && (
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
-                      Verified Member
-                    </span>
-                  )}
+          {/* Row 4: Author Identity & Strict Privacy Protection */}
+          <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <ShieldCheck className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {user ? 'Submitted entries link securely to your verified account.' : 'You can submit freely as a guest or provide an optional alias.'}
-                </p>
+                <div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>{keepAnonymous ? 'Anonymous Contributor' : 'Public Community Alias'}</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                      Private
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Your real email and personal name are strictly private and never published or shared.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={keepAnonymous}
+                    onChange={(e) => setKeepAnonymous(e.target.checked)}
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                  />
+                  <span>Submit as Anonymous</span>
+                </label>
               </div>
             </div>
 
-            {!user && (
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+            {!keepAnonymous && (
+              <div className="pt-2 border-t border-indigo-100 dark:border-indigo-900/40 flex items-center gap-2 animate-in fade-in duration-150">
+                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                  Custom Nickname:
+                </span>
                 <input
                   type="text"
                   value={guestName}
-                  onChange={(e) => setGuestName(e.target.value.slice(0, 50))}
-                  placeholder="Your Name (Optional)"
-                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full sm:w-40"
+                  onChange={(e) => setGuestName(e.target.value.slice(0, 30))}
+                  placeholder="e.g. PixelCoder (no emails)"
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full sm:w-60"
                 />
-                {onOpenAuth && (
-                  <button
-                    type="button"
-                    onClick={onOpenAuth}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors whitespace-nowrap cursor-pointer"
-                  >
-                    Sign In
-                  </button>
-                )}
               </div>
             )}
           </div>
@@ -519,6 +532,10 @@ export const ToolFeedbackComponent: React.FC<ToolFeedbackComponentProps> = ({
                 const isBug = item.type === 'bug_report';
                 const isImprovement = item.type === 'improvement';
 
+                const safeName = (item.userName && !item.userName.includes('@') && item.userName.toLowerCase() !== 'raj') 
+                  ? maskName(item.userName) 
+                  : 'Community Contributor';
+
                 return (
                   <div
                     key={item.id}
@@ -528,11 +545,11 @@ export const ToolFeedbackComponent: React.FC<ToolFeedbackComponentProps> = ({
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] font-bold shrink-0">
-                          {(item.userName?.[0] || 'U').toUpperCase()}
+                          {(safeName[0] || 'C').toUpperCase()}
                         </div>
                         <div className="min-w-0">
                           <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                            {item.userName || 'Community User'}
+                            {safeName}
                           </div>
                           <div className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
                             <Clock className="w-2.5 h-2.5" />

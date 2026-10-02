@@ -541,7 +541,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logItem: AdminAuditLog = {
       id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       adminId: currentUser?.uid || 'system-admin',
-      adminEmail: currentUser?.email || 'rajht203@gmail.com',
+      adminEmail: currentUser?.email || 'admin@toolstack.app',
       action,
       details,
       createdAt: new Date().toISOString()
