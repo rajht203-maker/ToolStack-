@@ -1,9 +1,9 @@
 import React from 'react';
 import { ToolItem } from '../../types';
-import { IconRenderer } from '../common/IconRenderer';
+import { ToolIconTile } from '../common/ToolIconTile';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Heart, ArrowRight, Lock, Flame } from 'lucide-react';
+import { Heart, ArrowRight, Lock, Flame, Layers } from 'lucide-react';
 
 interface ToolCardProps {
   tool: ToolItem;
@@ -12,39 +12,16 @@ interface ToolCardProps {
   clickCount?: number;
 }
 
-const getCategoryIconStyles = (category: string) => {
-  switch (category) {
-    case 'pdf':
-      return 'bg-red-50 dark:bg-red-950/40 text-red-500 dark:text-red-400 group-hover:bg-red-500 group-hover:text-white';
-    case 'image':
-      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-500 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white';
-    case 'developer':
-      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-500 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white';
-    case 'text':
-      return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white';
-    case 'calculator':
-      return 'bg-pink-50 dark:bg-pink-950/40 text-pink-500 dark:text-pink-400 group-hover:bg-pink-500 group-hover:text-white';
-    case 'converter':
-      return 'bg-violet-50 dark:bg-violet-950/40 text-violet-500 dark:text-violet-400 group-hover:bg-violet-500 group-hover:text-white';
-    case 'security':
-      return 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-500 dark:text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white';
-    case 'seo':
-      return 'bg-orange-50 dark:bg-orange-950/40 text-orange-500 dark:text-orange-400 group-hover:bg-orange-500 group-hover:text-white';
-    default:
-      return 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white';
-  }
-};
-
 export const ToolCard: React.FC<ToolCardProps> = ({
   tool,
   onSelect,
   popularityRank,
   clickCount,
 }) => {
-  const { user, isFavorite, toggleFavorite } = useAuth();
+  const { user, isFavorite, toggleFavorite, isInStack, addToStack, removeFromStack } = useAuth();
   const { themeSettings, activeColors } = useTheme();
   const favorited = isFavorite(tool.id);
-  const iconColorClasses = getCategoryIconStyles(tool.category);
+  const inStack = isInStack(tool.id);
   const isAuthRequired = Boolean(tool.requiresAuth);
 
   const cornerRadiusClass =
@@ -81,11 +58,11 @@ export const ToolCard: React.FC<ToolCardProps> = ({
       <div>
         {/* Top bar: Category Icon & Badges */}
         <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
-          <div
-            className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-colors ${iconColorClasses}`}
-          >
-            <IconRenderer name={tool.icon} className="w-5 h-5 sm:w-6 sm:h-6" />
-          </div>
+          <ToolIconTile
+            category={tool.category}
+            iconName={tool.icon}
+            size="md"
+          />
 
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
             {/* Click-Frequency / Popularity Badge */}
@@ -123,6 +100,28 @@ export const ToolCard: React.FC<ToolCardProps> = ({
               </span>
             )}
 
+            {/* Quick Add to My Stack Button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (inStack) {
+                  removeFromStack(tool.id);
+                } else {
+                  addToStack({ id: tool.id, name: tool.name, category: tool.category });
+                }
+              }}
+              className={`p-1.5 rounded-full transition-colors ${
+                inStack
+                  ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/50 dark:text-indigo-400'
+                  : 'text-slate-300 dark:text-slate-600 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+              title={inStack ? 'In My Stack (click to remove)' : 'Add to My Stack (cloud synced)'}
+            >
+              <Layers className={`w-4 h-4 ${inStack ? 'fill-indigo-600/30 dark:fill-indigo-400/30' : ''}`} />
+            </button>
+
+            {/* Favorite Star Button */}
             <button
               type="button"
               onClick={(e) => {

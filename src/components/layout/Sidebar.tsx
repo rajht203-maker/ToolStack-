@@ -4,7 +4,6 @@ import { useTools } from '../../context/ToolsContext';
 import { ToolItem } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { maskName, isPrivacyModeEnabled } from '../../utils/privacy';
 import { IconRenderer } from '../common/IconRenderer';
 import {
   Home,
@@ -37,6 +36,7 @@ interface SidebarProps {
   onOpenSearch: () => void;
   onOpenFavorites: () => void;
   onOpenAuth: () => void;
+  onOpenDashboard?: () => void;
   onOpenHelp?: () => void;
   onSelectTool?: (tool: ToolItem) => void;
   darkMode: boolean;
@@ -54,6 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenSearch,
   onOpenFavorites,
   onOpenAuth,
+  onOpenDashboard,
   onOpenHelp,
   darkMode,
   onToggleDarkMode,
@@ -63,18 +64,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { user, profile, favorites } = useAuth();
   const { openThemeModal, activeColors } = useTheme();
   const { tools, categories, disabledTools } = useTools();
-
-  const [privacyMasked, setPrivacyMasked] = React.useState<boolean>(isPrivacyModeEnabled);
-
-  React.useEffect(() => {
-    const handlePrivacyChange = () => {
-      setPrivacyMasked(isPrivacyModeEnabled());
-    };
-    window.addEventListener('toolstack_privacy_change', handlePrivacyChange);
-    return () => {
-      window.removeEventListener('toolstack_privacy_change', handlePrivacyChange);
-    };
-  }, []);
 
   const activeTools = React.useMemo(() => {
     return tools.filter(t => !disabledTools.includes(t.id));
@@ -157,6 +146,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </span>
             )}
           </button>
+
+          {onOpenDashboard && (
+            <button
+              onClick={() => {
+                onOpenDashboard();
+                onCloseMobile();
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 transition-colors"
+              title="My Dashboard & Cloud Stack"
+            >
+              <Sparkles className="w-4 h-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+              {isOpen && <span className="flex-1 text-left">My Dashboard &amp; Hub</span>}
+            </button>
+          )}
 
           <button
             onClick={() => {
@@ -340,7 +343,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isOpen && (
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                  {privacyMasked ? maskName(profile?.displayName) : (profile?.displayName || 'Member')}
+                  {profile?.displayName || 'Member'}
                 </div>
                 <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                   <Shield className="w-2.5 h-2.5" /> All Tools Unlocked

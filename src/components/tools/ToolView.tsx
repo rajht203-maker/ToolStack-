@@ -40,8 +40,11 @@ import {
   Info,
   Award,
   Lightbulb,
-  CheckCircle2
+  CheckCircle2,
+  Users,
+  BookOpen
 } from 'lucide-react';
+import { getTopToolContent } from '../../data/top40ToolContent';
 
 function getToolKeyBenefits(tool: ToolItem) {
   const common = [
@@ -194,6 +197,7 @@ export const ToolView: React.FC<ToolViewProps> = ({
   const shareRef = useRef<HTMLDivElement>(null);
 
   const seoData = useMemo(() => getCompleteToolSEO(tool, allRegisteredTools), [tool, allRegisteredTools]);
+  const customContent = useMemo(() => getTopToolContent(tool.slug) || getTopToolContent(tool.id), [tool.slug, tool.id]);
   const relatedTools = seoData.relatedTools;
   const categoryInfo = CATEGORIES.find(c => c.id === tool.category);
 
@@ -719,6 +723,28 @@ export const ToolView: React.FC<ToolViewProps> = ({
         </div>
       </div>
 
+      {/* In-Depth Overview & Target Audience (For Indexable High-Value Tools) */}
+      {customContent && (
+        <section className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">
+          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+            <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
+              About {tool.name}
+            </h2>
+          </div>
+          <div className="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+            <p className="text-justify sm:text-left">{customContent.inDepthOverview}</p>
+            <div className="p-4 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/40 flex items-start gap-3">
+              <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <strong className="font-bold text-slate-900 dark:text-white">Who It Helps: </strong>
+                <span className="text-slate-600 dark:text-slate-300">{customContent.targetAudience}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Guide: How to Use & FAQs */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Step by step guide */}
@@ -730,7 +756,7 @@ export const ToolView: React.FC<ToolViewProps> = ({
             </h3>
           </div>
           <ol className="space-y-2.5">
-            {seoData.howToUse.map((step, idx) => (
+            {(customContent?.stepByStepGuide || seoData.howToUse).map((step, idx) => (
               <li key={idx} className="flex items-start gap-3 text-xs text-slate-600 dark:text-slate-300">
                 <span className="w-5 h-5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center shrink-0 text-[10px]">
                   {idx + 1}
@@ -741,7 +767,7 @@ export const ToolView: React.FC<ToolViewProps> = ({
           </ol>
         </div>
 
-        {/* FAQs - Guaranteed 3 questions matching FAQPage JSON-LD Schema */}
+        {/* FAQs - High Value & Detailed */}
         <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
           <div className="flex items-center gap-2">
             <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -749,8 +775,8 @@ export const ToolView: React.FC<ToolViewProps> = ({
               Frequently Asked Questions
             </h3>
           </div>
-          <div className="space-y-3">
-            {seoData.faqs.map((faq, idx) => (
+          <div className="space-y-3.5">
+            {(customContent?.faqs || seoData.faqs).map((faq, idx) => (
               <div key={idx} className="space-y-1 text-xs">
                 <div className="font-semibold text-slate-800 dark:text-slate-200">
                   {faq.question}
@@ -775,14 +801,14 @@ export const ToolView: React.FC<ToolViewProps> = ({
             </h2>
           </div>
           <div className="space-y-3.5">
-            {getToolKeyBenefits(tool).map((benefit, idx) => (
+            {(customContent?.keyBenefits || getToolKeyBenefits(tool)).map((benefit, idx) => (
               <div key={idx} className="space-y-1 text-xs">
                 <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                   <span>{benefit.title}</span>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 pl-5 leading-relaxed font-medium">
-                  {benefit.desc}
+                  {'description' in benefit ? (benefit as any).description : (benefit as any).desc}
                 </p>
               </div>
             ))}
@@ -798,20 +824,35 @@ export const ToolView: React.FC<ToolViewProps> = ({
             </h2>
           </div>
           <div className="space-y-3.5">
-            {getToolPracticalExamples(tool).map((example, idx) => (
+            {(customContent?.useCases || getToolPracticalExamples(tool)).map((example, idx) => (
               <div key={idx} className="space-y-1 text-xs">
                 <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
                   <span>{example.title}</span>
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 pl-3 leading-relaxed font-medium">
-                  {example.detail}
+                  {'description' in example ? (example as any).description : (example as any).detail}
                 </p>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Pro Tips Banner (If present) */}
+      {customContent?.proTips && customContent.proTips.length > 0 && (
+        <div className="p-5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200 dark:border-amber-900/60 rounded-2xl space-y-2">
+          <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
+            <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>Expert Pro Tips for {tool.name}</span>
+          </div>
+          <ul className="space-y-1.5 pl-6 list-disc text-xs text-slate-700 dark:text-slate-300">
+            {customContent.proTips.map((tip, idx) => (
+              <li key={idx} className="leading-relaxed font-medium">{tip}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Tool Technical Specifications & Overview for Search Engines & Users */}
       <section 

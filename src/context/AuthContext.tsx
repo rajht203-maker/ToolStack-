@@ -20,7 +20,18 @@ import {
 } from 'firebase/firestore';
 import { auth, db, googleProvider, handleFirestoreError, OperationType } from '../lib/firebase';
 import { getFriendlyAuthErrorMessage } from '../utils/authErrors';
-import { UserProfile, UserFavorite, ToolHistoryItem, SavedPreset, SiteSettings, AdminAuditLog } from '../types';
+import { 
+  UserProfile, 
+  UserFavorite, 
+  ToolHistoryItem, 
+  SavedPreset, 
+  SiteSettings, 
+  AdminAuditLog,
+  UserStackItem,
+  SavedChain,
+  UserPreferences,
+  ToolCategory
+} from '../types';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -34,6 +45,22 @@ interface AuthContextType {
   favorites: UserFavorite[];
   history: ToolHistoryItem[];
   presets: SavedPreset[];
+  myStack: UserStackItem[];
+  savedChains: SavedChain[];
+  userPreferences: UserPreferences;
+  lastUsedTool: ToolHistoryItem | null;
+  syncStatus: 'synced' | 'syncing' | 'offline' | 'local';
+  syncNow: () => Promise<void>;
+  guestToolCount: number;
+  showGuestLoginPrompt: boolean;
+  dismissGuestLoginPrompt: () => void;
+  addToStack: (tool: { id: string; name: string; category: ToolCategory }) => Promise<void>;
+  removeFromStack: (toolId: string) => Promise<void>;
+  isInStack: (toolId: string) => boolean;
+  reorderStack: (newStack: UserStackItem[]) => Promise<void>;
+  saveChain: (name: string, description: string, toolIds: string[]) => Promise<void>;
+  deleteChain: (chainId: string) => Promise<void>;
+  updateUserPreferences: (prefs: Partial<UserPreferences>) => Promise<void>;
   siteSettings: SiteSettings;
   loginWithGoogle: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -80,10 +107,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [favorites, setFavorites] = useState<UserFavorite[]>([]);
   const [history, setHistory] = useState<ToolHistoryItem[]>([]);
   const [presets, setPresets] = useState<SavedPreset[]>([]);
+  const [myStack, setMyStack] = useState<UserStackItem[]>([]);
+  const [savedChains, setSavedChains] = useState<SavedChain[]>([]);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>({ theme: 'system', privacyMasked: true });
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'local'>('local');
+  const [guestToolCount, setGuestToolCount] = useState<number>(() => {
+    try {
+      return parseInt(localStorage.getItem('toolstack_guest_uses') || '0', 10);
+    } catch {
+      return 0;
+    }
+  });
+  const [dismissedGuestPrompt, setDismissedGuestPrompt] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('toolstack_dismissed_guest_prompt') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
   const [error, setError] = useState<string | null>(null);
 
   const clearError = () => setError(null);
+
+  const lastUsedTool = history.length > 0 ? history[0] : null;
+  const showGuestLoginPrompt = !currentUser && guestToolCount >= 2 && !dismissedGuestPrompt;
+
+  const dismissGuestLoginPrompt = () => {
+    setDismissedGuestPrompt(true);
+    try {
+      sessionStorage.setItem('toolstack_dismissed_guest_prompt', 'true');
+    } catch {
+      // ignore
+    }
+  };
 
   // Sync auth state across sessions and page refreshes
   useEffect(() => {
@@ -188,6 +245,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserSubcollections = async (uid: string) => {
     try {
+      setSyncStatus('syncing');
+
       // Favorites
       const favSnap = await getDocs(collection(db, 'users', uid, 'favorites'));
       const favList: UserFavorite[] = [];
@@ -206,8 +265,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const presList: SavedPreset[] = [];
       presetSnap.forEach((d) => presList.push(d.data() as SavedPreset));
       setPresets(presList);
+
+      // My Stack
+      const stackSnap = await getDocs(collection(db, 'users', uid, 'stack'));
+      const stackList: UserStackItem[] = [];
+      stackSnap.forEach((d) => stackList.push(d.data() as UserStackItem));
+      stackList.sort((a, b) => (a.order || 0) - (b.order || 0));
+      setMyStack(stackList);
+
+      // Saved Chains
+      const chainSnap = await getDocs(collection(db, 'users', uid, 'chains'));
+      const chainList: SavedChain[] = [];
+      chainSnap.forEach((d) => chainList.push(d.data() as SavedChain));
+      chainList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setSavedChains(chainList);
+
+      // Preferences
+      const prefSnap = await getDoc(doc(db, 'users', uid, 'preferences', 'user_prefs'));
+      if (prefSnap.exists()) {
+        setUserPreferences(prefSnap.data() as UserPreferences);
+      }
+
+      setSyncStatus('synced');
     } catch (e) {
+      console.warn('Could not sync user cloud subcollections, falling back to local storage:', e);
       loadLocalData();
+      setSyncStatus('offline');
     }
   };
 
@@ -219,8 +302,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (localHist) setHistory(JSON.parse(localHist));
       const localPresets = localStorage.getItem('toolstack_presets');
       if (localPresets) setPresets(JSON.parse(localPresets));
+      const localStack = localStorage.getItem('toolstack_mystack');
+      if (localStack) setMyStack(JSON.parse(localStack));
+      const localChains = localStorage.getItem('toolstack_chains');
+      if (localChains) setSavedChains(JSON.parse(localChains));
+      const localPrefs = localStorage.getItem('toolstack_preferences');
+      if (localPrefs) setUserPreferences(JSON.parse(localPrefs));
     } catch (e) {
       // ignore
+    }
+    setSyncStatus('local');
+  };
+
+  const syncNow = async () => {
+    if (!currentUser) {
+      loadLocalData();
+      return;
+    }
+    setSyncStatus('syncing');
+    try {
+      await loadUserSubcollections(currentUser.uid);
+      setSyncStatus('synced');
+    } catch {
+      setSyncStatus('offline');
     }
   };
 
@@ -408,11 +512,144 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } else {
       localStorage.setItem('toolstack_history', JSON.stringify(next));
+      // Track guest usage for gentle cloud sync prompt
+      const newCount = guestToolCount + 1;
+      setGuestToolCount(newCount);
+      try {
+        localStorage.setItem('toolstack_guest_uses', newCount.toString());
+      } catch {
+        // ignore
+      }
     }
   };
 
   const addHistory = async (toolId: string, toolName: string, summary: string) => {
     return addHistoryItem(toolId, toolName, summary);
+  };
+
+  const isInStack = (toolId: string) => {
+    return myStack.some(item => item.toolId === toolId);
+  };
+
+  const addToStack = async (tool: { id: string; name: string; category: ToolCategory }) => {
+    if (myStack.some(item => item.toolId === tool.id)) return;
+    const newItem: UserStackItem = {
+      id: tool.id,
+      userId: currentUser?.uid || 'guest',
+      toolId: tool.id,
+      toolName: tool.name,
+      category: tool.category,
+      order: myStack.length,
+      addedAt: new Date().toISOString()
+    };
+    const next = [...myStack, newItem];
+    setMyStack(next);
+    if (currentUser) {
+      setSyncStatus('syncing');
+      try {
+        await setDoc(doc(db, 'users', currentUser.uid, 'stack', tool.id), newItem);
+        setSyncStatus('synced');
+      } catch (e) {
+        setSyncStatus('offline');
+      }
+    } else {
+      localStorage.setItem('toolstack_mystack', JSON.stringify(next));
+    }
+  };
+
+  const removeFromStack = async (toolId: string) => {
+    const next = myStack.filter(item => item.toolId !== toolId);
+    setMyStack(next);
+    if (currentUser) {
+      setSyncStatus('syncing');
+      try {
+        await deleteDoc(doc(db, 'users', currentUser.uid, 'stack', toolId));
+        setSyncStatus('synced');
+      } catch (e) {
+        setSyncStatus('offline');
+      }
+    } else {
+      localStorage.setItem('toolstack_mystack', JSON.stringify(next));
+    }
+  };
+
+  const reorderStack = async (newStack: UserStackItem[]) => {
+    const updated = newStack.map((item, idx) => ({ ...item, order: idx }));
+    setMyStack(updated);
+    if (currentUser) {
+      setSyncStatus('syncing');
+      try {
+        await Promise.all(
+          updated.map(item => setDoc(doc(db, 'users', currentUser.uid, 'stack', item.toolId), item))
+        );
+        setSyncStatus('synced');
+      } catch (e) {
+        setSyncStatus('offline');
+      }
+    } else {
+      localStorage.setItem('toolstack_mystack', JSON.stringify(updated));
+    }
+  };
+
+  const saveChain = async (name: string, description: string, toolIds: string[]) => {
+    const chainId = `chain-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const newChain: SavedChain = {
+      id: chainId,
+      userId: currentUser?.uid || 'guest',
+      name,
+      description,
+      toolIds,
+      createdAt: new Date().toISOString()
+    };
+    const next = [newChain, ...savedChains];
+    setSavedChains(next);
+    if (currentUser) {
+      setSyncStatus('syncing');
+      try {
+        await setDoc(doc(db, 'users', currentUser.uid, 'chains', chainId), newChain);
+        setSyncStatus('synced');
+      } catch (e) {
+        setSyncStatus('offline');
+      }
+    } else {
+      localStorage.setItem('toolstack_chains', JSON.stringify(next));
+    }
+  };
+
+  const deleteChain = async (chainId: string) => {
+    const next = savedChains.filter(c => c.id !== chainId);
+    setSavedChains(next);
+    if (currentUser) {
+      setSyncStatus('syncing');
+      try {
+        await deleteDoc(doc(db, 'users', currentUser.uid, 'chains', chainId));
+        setSyncStatus('synced');
+      } catch (e) {
+        setSyncStatus('offline');
+      }
+    } else {
+      localStorage.setItem('toolstack_chains', JSON.stringify(next));
+    }
+  };
+
+  const updateUserPreferences = async (prefs: Partial<UserPreferences>) => {
+    const updated: UserPreferences = {
+      ...userPreferences,
+      ...prefs,
+      updatedAt: new Date().toISOString()
+    };
+    setUserPreferences(updated);
+    if (currentUser) {
+      setSyncStatus('syncing');
+      try {
+        await setDoc(doc(db, 'users', currentUser.uid, 'preferences', 'user_prefs'), updated, { merge: true });
+        setSyncStatus('synced');
+      } catch (e) {
+        setSyncStatus('offline');
+      }
+    } else {
+      localStorage.setItem('toolstack_preferences', JSON.stringify(updated));
+    }
   };
 
   const savePreset = async (toolId: string, name: string, presetData: string) => {
@@ -541,7 +778,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logItem: AdminAuditLog = {
       id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       adminId: currentUser?.uid || 'system-admin',
-      adminEmail: currentUser?.email || 'admin@toolstack.app',
+      adminEmail: currentUser?.email || 'rajht203@gmail.com',
       action,
       details,
       createdAt: new Date().toISOString()
@@ -648,6 +885,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       favorites,
       history,
       presets,
+      myStack,
+      savedChains,
+      userPreferences,
+      lastUsedTool,
+      syncStatus,
+      syncNow,
+      guestToolCount,
+      showGuestLoginPrompt,
+      dismissGuestLoginPrompt,
+      addToStack,
+      removeFromStack,
+      isInStack,
+      reorderStack,
+      saveChain,
+      deleteChain,
+      updateUserPreferences,
       siteSettings,
       loginWithGoogle: signInWithGoogle,
       signInWithGoogle,

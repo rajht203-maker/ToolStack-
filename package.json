@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "generate:sitemap": "tsx scripts/generate-sitemap.ts",
-    "build": "npm run generate:sitemap && vite build",
+    "prerender": "tsx scripts/prerender.ts",
+    "build": "npm run generate:sitemap && vite build && npm run prerender",
     "build:docs": "vite build --outDir docs",
     "predeploy": "vite build",
     "deploy": "gh-pages -d dist",

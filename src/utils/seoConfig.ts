@@ -2,17 +2,17 @@ import { ToolItem, CategoryInfo } from '../types';
 import { CATEGORIES, TOOLS_DATA } from '../data/toolsData';
 
 export interface PageSEOConfig {
-  name: string;
-  slug: string;
-  description: string;
+  name?: string;
+  slug?: string;
+  description?: string;
   category: string;
   keywords: string[];
   canonicalUrl: string;
   indexable: boolean;
-  h1: string;
+  h1?: string;
   seoTitle: string;
   seoDescription: string;
-  relatedTools: string[];
+  relatedTools?: string[];
   structuredData: Record<string, any>[];
 }
 

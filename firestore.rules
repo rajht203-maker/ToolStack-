@@ -65,6 +65,21 @@ service cloud.firestore {
       match /presets/{presetId} {
         allow read, write: if isOwner(userId) && isValidId(presetId);
       }
+
+      // Subcollection: Stack (My Stack pinned tools)
+      match /stack/{stackId} {
+        allow read, write: if isOwner(userId) && isValidId(stackId);
+      }
+
+      // Subcollection: Chains (Saved recipes)
+      match /chains/{chainId} {
+        allow read, write: if isOwner(userId) && isValidId(chainId);
+      }
+
+      // Subcollection: Preferences
+      match /preferences/{prefId} {
+        allow read, write: if isOwner(userId) && isValidId(prefId);
+      }
     }
 
     // Global site settings (announcements, featured tools)

@@ -8,13 +8,23 @@ interface FooterProps {
   onOpenAdmin: () => void;
   onOpenHelp?: () => void;
   onOpenPrivacyPolicy?: () => void;
+  onOpenAbout?: () => void;
+  onOpenContact?: () => void;
+  onOpenTerms?: () => void;
+  onOpenDisclaimer?: () => void;
+  onOpenBlog?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ 
   onSelectCategory, 
   onOpenAdmin, 
   onOpenHelp,
-  onOpenPrivacyPolicy
+  onOpenPrivacyPolicy,
+  onOpenAbout,
+  onOpenContact,
+  onOpenTerms,
+  onOpenDisclaimer,
+  onOpenBlog
 }) => {
   const { isAdmin } = useAuth();
   return (
@@ -179,54 +189,49 @@ export const Footer: React.FC<FooterProps> = ({
             </ul>
           </div>
 
-          {/* Security & SEO */}
+          {/* Company & Legal */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-              Security & SEO
+              Company &amp; Compliance
             </h4>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li>
                 <a
-                  href="/tools/password-generator"
+                  href="/about"
                   onClick={(e) => {
-                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
-                      e.preventDefault();
-                      window.history.pushState({}, '', '/tools/password-generator');
-                      window.dispatchEvent(new PopStateEvent('popstate'));
-                    }
+                    e.preventDefault();
+                    if (onOpenAbout) onOpenAbout();
+                    else window.location.href = '/about';
                   }}
                   className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
-                  Cryptographic Password Generator
+                  About ToolStack
                 </a>
               </li>
               <li>
                 <a
-                  href="/tools/hash-sha256"
+                  href="/contact"
                   onClick={(e) => {
-                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
-                      e.preventDefault();
-                      window.history.pushState({}, '', '/tools/hash-sha256');
-                      window.dispatchEvent(new PopStateEvent('popstate'));
-                    }
+                    e.preventDefault();
+                    if (onOpenContact) onOpenContact();
+                    else window.location.href = '/contact';
                   }}
                   className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
-                  SHA-256 Hash Digest
+                  Contact &amp; Support
                 </a>
               </li>
               <li>
                 <a
-                  href="/category/seo"
+                  href="/blog"
                   onClick={(e) => {
-                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
-                      e.preventDefault();
-                      onSelectCategory('seo');
-                    }
+                    e.preventDefault();
+                    if (onOpenBlog) onOpenBlog();
+                    else window.location.href = '/blog';
                   }}
                   className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
-                  Robots.txt & Sitemap Generator
+                  Blog &amp; Knowledge Base
                 </a>
               </li>
               <li>
@@ -234,15 +239,38 @@ export const Footer: React.FC<FooterProps> = ({
                   href="/privacy-policy"
                   onClick={(e) => {
                     e.preventDefault();
-                    if (onOpenPrivacyPolicy) {
-                      onOpenPrivacyPolicy();
-                    } else {
-                      window.location.href = '/privacy-policy';
-                    }
+                    if (onOpenPrivacyPolicy) onOpenPrivacyPolicy();
+                    else window.location.href = '/privacy-policy';
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block font-semibold"
+                >
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/terms"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onOpenTerms) onOpenTerms();
+                    else window.location.href = '/terms';
                   }}
                   className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
-                  Privacy Policy &amp; Terms
+                  Terms &amp; Conditions
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/disclaimer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onOpenDisclaimer) onOpenDisclaimer();
+                    else window.location.href = '/disclaimer';
+                  }}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
+                >
+                  Disclaimer &amp; Disclosures
                 </a>
               </li>
               {isAdmin && (
@@ -262,22 +290,74 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
           <div>
-            © {new Date().getFullYear()} TOOLSTACK INTERACTIVE. ALL 52 ONLINE TOOLS ARE FREE.
+            © {new Date().getFullYear()} TOOLSTACK INTERACTIVE. 100% PRIVATE CLIENT-SIDE UTILITIES.
           </div>
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-5">
+            <a
+              href="/about"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onOpenAbout) onOpenAbout();
+                else window.location.href = '/about';
+              }}
+              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              About
+            </a>
+            <a
+              href="/contact"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onOpenContact) onOpenContact();
+                else window.location.href = '/contact';
+              }}
+              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              Contact
+            </a>
             <a
               href="/privacy-policy"
               onClick={(e) => {
                 e.preventDefault();
-                if (onOpenPrivacyPolicy) {
-                  onOpenPrivacyPolicy();
-                } else {
-                  window.location.href = '/privacy-policy';
-                }
+                if (onOpenPrivacyPolicy) onOpenPrivacyPolicy();
+                else window.location.href = '/privacy-policy';
               }}
-              className="text-indigo-600 dark:text-indigo-400 hover:underline font-bold transition-colors"
+              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-bold text-indigo-600 dark:text-indigo-400"
             >
-              Privacy Policy
+              Privacy
+            </a>
+            <a
+              href="/terms"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onOpenTerms) onOpenTerms();
+                else window.location.href = '/terms';
+              }}
+              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              Terms
+            </a>
+            <a
+              href="/disclaimer"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onOpenDisclaimer) onOpenDisclaimer();
+                else window.location.href = '/disclaimer';
+              }}
+              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              Disclaimer
+            </a>
+            <a
+              href="/blog"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onOpenBlog) onOpenBlog();
+                else window.location.href = '/blog';
+              }}
+              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              Blog
             </a>
             {onOpenHelp && (
               <button 

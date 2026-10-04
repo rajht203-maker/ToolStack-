@@ -78,6 +78,34 @@ export interface UserFavorite {
   createdAt: string;
 }
 
+export interface UserStackItem {
+  id: string;
+  userId: string;
+  toolId: string;
+  toolName: string;
+  category: ToolCategory;
+  order: number;
+  addedAt: string;
+}
+
+export interface SavedChain {
+  id: string;
+  userId: string;
+  name: string;
+  description: string;
+  toolIds: string[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface UserPreferences {
+  theme?: 'dark' | 'light' | 'system';
+  privacyMasked?: boolean;
+  soundEnabled?: boolean;
+  autoCopyResult?: boolean;
+  updatedAt?: string;
+}
+
 export interface ToolHistoryItem {
   id: string;
   userId: string;

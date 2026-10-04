@@ -18,21 +18,24 @@ import {
   HelpCircle,
   Palette,
   Eye,
-  EyeOff,
-  ShieldCheck
+  EyeOff
 } from 'lucide-react';
+import { maskName, maskEmail, isPrivacyModeEnabled, setPrivacyMode } from '../../utils/privacy';
 import { CATEGORIES as DEFAULT_CATEGORIES, TOOLS_DATA as DEFAULT_TOOLS_DATA } from '../../data/toolsData';
 import { useTools } from '../../context/ToolsContext';
 import { PWAInstallButton } from '../common/PWAInstallButton';
-import { maskEmail, maskName, isPrivacyModeEnabled, setPrivacyMode } from '../../utils/privacy';
 
 interface NavbarProps {
   onOpenSearch: () => void;
   onOpenFavorites: () => void;
   onOpenAuth: () => void;
   onOpenAdmin: () => void;
+  onOpenDashboard?: () => void;
   onOpenProfile?: () => void;
   onOpenHelp?: () => void;
+  onOpenBlog?: () => void;
+  onOpenAbout?: () => void;
+  onOpenContact?: () => void;
   onSelectCategory: (catId: string | null) => void;
   onGoHome: () => void;
   darkMode: boolean;
@@ -45,8 +48,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenFavorites,
   onOpenAuth,
   onOpenAdmin,
+  onOpenDashboard,
   onOpenProfile,
   onOpenHelp,
+  onOpenBlog,
+  onOpenAbout,
+  onOpenContact,
   onSelectCategory,
   onGoHome,
   darkMode,
@@ -62,7 +69,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
-  const [privacyMasked, setPrivacyMasked] = useState<boolean>(() => isPrivacyModeEnabled());
+  const [privacyMasked, setPrivacyMasked] = useState<boolean>(isPrivacyModeEnabled);
+
+  React.useEffect(() => {
+    const handlePrivacyChange = () => {
+      setPrivacyMasked(isPrivacyModeEnabled());
+    };
+    window.addEventListener('toolstack_privacy_change', handlePrivacyChange);
+    return () => {
+      window.removeEventListener('toolstack_privacy_change', handlePrivacyChange);
+    };
+  }, []);
 
   const togglePrivacy = () => {
     const next = !privacyMasked;
@@ -107,6 +124,52 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
           </button>
+
+          {/* Main Desktop Header Navigation Menu (AdSense Compliance) */}
+          <nav className="hidden xl:flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <button
+              onClick={onGoHome}
+              className="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              Home
+            </button>
+            <button
+              onClick={() => onSelectCategory(null)}
+              className="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              Tools
+            </button>
+            <button
+              onClick={() => onSelectCategory('calculator')}
+              className="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              Calculators
+            </button>
+            {onOpenBlog && (
+              <button
+                onClick={onOpenBlog}
+                className="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                Blog
+              </button>
+            )}
+            {onOpenAbout && (
+              <button
+                onClick={onOpenAbout}
+                className="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                About
+              </button>
+            )}
+            {onOpenContact && (
+              <button
+                onClick={onOpenContact}
+                className="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                Contact
+              </button>
+            )}
+          </nav>
 
           {/* Category Dropdown Navigation */}
           <div className="relative hidden lg:block">
@@ -226,6 +289,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             <PWAInstallButton />
           </div>
 
+          {/* My Dashboard Personal Hub Button */}
+          {onOpenDashboard && (
+            <button
+              onClick={onOpenDashboard}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800/60 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+              title="Open Personal Hub (My Stack & Cloud Sync)"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span className="hidden sm:inline">My Hub</span>
+            </button>
+          )}
+
           {/* Admin Panel Button (if admin) */}
           {isAdmin && (
             <button
@@ -245,7 +320,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none"
               >
                 <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center overflow-hidden">
-                  {user.photoURL ? (
+                  {user.photoURL && !privacyMasked ? (
                     <img src={user.photoURL} alt="Avatar" width="32" height="32" className="w-full h-full object-cover" />
                   ) : (
                     (user.displayName || user.email || 'U').charAt(0).toUpperCase()
@@ -273,12 +348,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <button
                         type="button"
                         onClick={togglePrivacy}
-                        className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors shrink-0"
-                        title={privacyMasked ? "Click to reveal your email on screen" : "Click to mask your email (Privacy Shield)"}
+                        className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors shrink-0"
+                        title={privacyMasked ? "Reveal full email on screen" : "Mask email address"}
                       >
-                        {privacyMasked ? <EyeOff className="w-4 h-4 text-indigo-500" /> : <Eye className="w-4 h-4" />}
+                        {privacyMasked ? <EyeOff className="w-3.5 h-3.5 text-indigo-500" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
                     </div>
+
+                    {onOpenDashboard && (
+                      <button
+                        onClick={() => {
+                          onOpenDashboard();
+                          setProfileDropdownOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2"
+                      >
+                        <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        <span>My Dashboard &amp; Stack</span>
+                      </button>
+                    )}
 
                     {onOpenProfile && (
                       <button

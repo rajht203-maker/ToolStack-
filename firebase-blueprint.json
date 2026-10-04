@@ -40,6 +40,51 @@
       },
       "required": ["userId", "toolId", "toolName"]
     },
+    "UserStackItem": {
+      "title": "My Stack Tool",
+      "description": "Custom pinned and ordered user stack tool",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "toolId": { "type": "string", "maxLength": 64 },
+        "toolName": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 32 },
+        "order": { "type": "number" },
+        "addedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "toolId", "toolName", "category"]
+    },
+    "SavedChain": {
+      "title": "Saved Chain Recipe",
+      "description": "User saved workflow chains between tools",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "description": { "type": "string", "maxLength": 512 },
+        "toolIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "toolIds"]
+    },
+    "UserPreferences": {
+      "title": "User Preferences",
+      "description": "User synced preferences across devices",
+      "type": "object",
+      "properties": {
+        "theme": { "type": "string", "enum": ["dark", "light", "system"] },
+        "privacyMasked": { "type": "boolean" },
+        "soundEnabled": { "type": "boolean" },
+        "autoCopyResult": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "SavedPreset": {
       "title": "Saved Preset",
       "description": "User saved tool parameters or configurations",
@@ -148,6 +193,18 @@
     "/users/{userId}/presets/{presetId}": {
       "schema": "SavedPreset",
       "description": "User's saved configurations"
+    },
+    "/users/{userId}/stack/{stackId}": {
+      "schema": "UserStackItem",
+      "description": "User's custom pinned stack tools"
+    },
+    "/users/{userId}/chains/{chainId}": {
+      "schema": "SavedChain",
+      "description": "User's saved tool chains and recipes"
+    },
+    "/users/{userId}/preferences/{prefId}": {
+      "schema": "UserPreferences",
+      "description": "User's synced preferences"
     },
     "/site_settings/{settingId}": {
       "schema": "SiteSettings",

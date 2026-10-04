@@ -21,13 +21,20 @@ import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { UserProfileModal } from './components/user/UserProfileModal';
 import { PrivacyPolicyPage } from './components/legal/PrivacyPolicyPage';
+import { AboutPage } from './components/pages/AboutPage';
+import { ContactPage } from './components/pages/ContactPage';
+import { TermsPage } from './components/pages/TermsPage';
+import { DisclaimerPage } from './components/pages/DisclaimerPage';
+import { BlogListPage } from './components/blog/BlogListPage';
+import { BlogPostPage } from './components/blog/BlogPostPage';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { getToolBySlug, TOOLS_DATA, CATEGORIES } from './data/toolsData';
 import { getHomeSEOConfig, getCategorySEOConfig, getAdminSEOConfig, getPrivacyPolicySEOConfig } from './utils/seoConfig';
 import { ToolItem } from './types';
 import { recordToolClick } from './utils/toolAnalytics';
-import { maskEmail } from './utils/privacy';
 import { Sparkles, Shield, Lock, X, ArrowLeft, LogIn } from 'lucide-react';
+import { PersonalDashboardModal } from './components/dashboard/PersonalDashboardModal';
+import { GuestLoginPrompt } from './components/common/GuestLoginPrompt';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -45,7 +52,14 @@ function AppContent() {
   const [userProfileModalOpen, setUserProfileModalOpen] = useState<boolean>(false);
   const [cheatSheetOpen, setCheatSheetOpen] = useState<boolean>(false);
   const [adminPanelOpen, setAdminPanelOpen] = useState<boolean>(false);
+  const [dashboardOpen, setDashboardOpen] = useState<boolean>(false);
   const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState<boolean>(false);
+  const [aboutOpen, setAboutOpen] = useState<boolean>(false);
+  const [contactOpen, setContactOpen] = useState<boolean>(false);
+  const [termsOpen, setTermsOpen] = useState<boolean>(false);
+  const [disclaimerOpen, setDisclaimerOpen] = useState<boolean>(false);
+  const [blogListOpen, setBlogListOpen] = useState<boolean>(false);
+  const [activeBlogSlug, setActiveBlogSlug] = useState<string | null>(null);
   const [isAdsTxt, setIsAdsTxt] = useState<boolean>(false);
   const [showBanner, setShowBanner] = useState<boolean>(true);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
@@ -130,45 +144,148 @@ function AppContent() {
       }
     }
 
+    const resetAllViews = () => {
+      setAboutOpen(false);
+      setContactOpen(false);
+      setTermsOpen(false);
+      setDisclaimerOpen(false);
+      setBlogListOpen(false);
+      setActiveBlogSlug(null);
+      setPrivacyPolicyOpen(false);
+      setAdminPanelOpen(false);
+      setDashboardOpen(false);
+      setIsAdsTxt(false);
+    };
+
+    // Check compliance and informational pages
+    if (pathname === '/about' || searchParams.get('page') === 'about' || hash === 'about') {
+      resetAllViews();
+      setAboutOpen(true);
+      setActiveTool(null);
+      setNotFoundSlug(null);
+      setSelectedCategory(null);
+      return;
+    }
+
+    if (pathname === '/contact' || searchParams.get('page') === 'contact' || hash === 'contact') {
+      resetAllViews();
+      setContactOpen(true);
+      setActiveTool(null);
+      setNotFoundSlug(null);
+      setSelectedCategory(null);
+      return;
+    }
+
+    if (pathname === '/terms' || searchParams.get('page') === 'terms' || hash === 'terms') {
+      resetAllViews();
+      setTermsOpen(true);
+      setActiveTool(null);
+      setNotFoundSlug(null);
+      setSelectedCategory(null);
+      return;
+    }
+
+    if (pathname === '/disclaimer' || searchParams.get('page') === 'disclaimer' || hash === 'disclaimer') {
+      resetAllViews();
+      setDisclaimerOpen(true);
+      setActiveTool(null);
+      setNotFoundSlug(null);
+      setSelectedCategory(null);
+      return;
+    }
+
+    // Check blog routes
+    if (pathname.startsWith('/blog/') || searchParams.get('blog')) {
+      const match = pathname.match(/\/blog\/([^/?#]+)/);
+      const slug = match ? match[1] : searchParams.get('blog');
+      if (slug) {
+        resetAllViews();
+        setActiveBlogSlug(slug);
+        setActiveTool(null);
+        setNotFoundSlug(null);
+        setSelectedCategory(null);
+        return;
+      }
+    }
+
+    if (pathname === '/blog' || searchParams.get('page') === 'blog' || hash === 'blog') {
+      resetAllViews();
+      setBlogListOpen(true);
+      setActiveTool(null);
+      setNotFoundSlug(null);
+      setSelectedCategory(null);
+      return;
+    }
+
+    // Calculators hub shortcut
+    if (pathname === '/calculators') {
+      resetAllViews();
+      setSelectedCategory('calculator');
+      setActiveTool(null);
+      setNotFoundSlug(null);
+      return;
+    }
+
+    // Tools hub shortcut
+    if (pathname === '/tools') {
+      resetAllViews();
+      setSelectedCategory(null);
+      setActiveTool(null);
+      setNotFoundSlug(null);
+      return;
+    }
+
     // Check category route: /category/[catId]
     const catMatch = pathname.match(/\/category\/([^/?#]+)/) || (pParam && pParam.match(/category\/([^/?#]+)/));
     if (catMatch && catMatch[1]) {
       const catId = catMatch[1];
       if (categories.some(c => c.id === catId)) {
+        resetAllViews();
         setSelectedCategory(catId);
         setActiveTool(null);
         setNotFoundSlug(null);
-        setAdminPanelOpen(false);
-        setPrivacyPolicyOpen(false);
-        setIsAdsTxt(false);
         return;
       }
+    }
+
+    const isDashboardRoute = pathname.includes('/dashboard') || 
+                             pathname.includes('/my-hub') || 
+                             searchParams.get('tab') === 'dashboard' || 
+                             searchParams.get('page') === 'dashboard' || 
+                             hash === 'dashboard';
+    if (isDashboardRoute) {
+      resetAllViews();
+      setDashboardOpen(true);
+      setActiveTool(null);
+      setNotFoundSlug(null);
+      setSelectedCategory(null);
+      return;
     }
 
     const isAdminRoute = pathname.includes('/admin') || 
                          searchParams.get('admin') === 'true' || 
                          (pParam && pParam.includes('admin'));
     if (isAdminRoute) {
+      resetAllViews();
       setAdminPanelOpen(true);
       setActiveTool(null);
       setNotFoundSlug(null);
       setSelectedCategory(null);
-      setPrivacyPolicyOpen(false);
-      setIsAdsTxt(false);
       return;
     }
 
     const isPrivacyPolicy = pathname.includes('/privacy-policy') || 
+                            pathname === '/privacy' ||
                             searchParams.get('page') === 'privacy-policy' || 
+                            searchParams.get('page') === 'privacy' ||
                             hash === 'privacy-policy' ||
                             (pParam && pParam.includes('privacy-policy'));
     if (isPrivacyPolicy) {
+      resetAllViews();
       setPrivacyPolicyOpen(true);
       setActiveTool(null);
       setNotFoundSlug(null);
       setSelectedCategory(null);
-      setAdminPanelOpen(false);
-      setIsAdsTxt(false);
       return;
     }
 
@@ -177,12 +294,11 @@ function AppContent() {
                           searchParams.get('p') === 'ads.txt' || 
                           hash === 'ads.txt';
     if (isAdsTxtRoute) {
+      resetAllViews();
       setIsAdsTxt(true);
       setActiveTool(null);
       setNotFoundSlug(null);
       setSelectedCategory(null);
-      setAdminPanelOpen(false);
-      setPrivacyPolicyOpen(false);
       return;
     }
     setIsAdsTxt(false);
@@ -198,28 +314,25 @@ function AppContent() {
     if (toolSlug) {
       const found = getToolBySlugDynamic(toolSlug);
       if (found) {
+        resetAllViews();
         setActiveTool(found);
         setNotFoundSlug(null);
         setSelectedCategory(null);
-        setAdminPanelOpen(false);
-        setPrivacyPolicyOpen(false);
         return;
       } else {
+        resetAllViews();
         setNotFoundSlug(toolSlug);
         setActiveTool(null);
         setSelectedCategory(null);
-        setAdminPanelOpen(false);
-        setPrivacyPolicyOpen(false);
         return;
       }
     }
 
     // Default: home
+    resetAllViews();
     setActiveTool(null);
     setNotFoundSlug(null);
     setSelectedCategory(null);
-    setAdminPanelOpen(false);
-    setPrivacyPolicyOpen(false);
   }, [location.pathname, location.search, getToolBySlugDynamic, categories]);
 
   // Synchronize route whenever React Router location changes
@@ -245,12 +358,37 @@ function AppContent() {
     return getHomeSEOConfig();
   }, [adminPanelOpen, selectedCategory, privacyPolicyOpen]);
 
-  // Sync activeTool with URL via React Router navigate
+  // Sync active view with URL via React Router navigate
   useEffect(() => {
     if (activeTool) {
       const targetPath = `/${activeTool.slug}`;
       if (location.pathname !== targetPath) {
         navigate(targetPath, { replace: true });
+      }
+    } else if (aboutOpen) {
+      if (location.pathname !== '/about') {
+        navigate('/about', { replace: true });
+      }
+    } else if (contactOpen) {
+      if (location.pathname !== '/contact') {
+        navigate('/contact', { replace: true });
+      }
+    } else if (termsOpen) {
+      if (location.pathname !== '/terms') {
+        navigate('/terms', { replace: true });
+      }
+    } else if (disclaimerOpen) {
+      if (location.pathname !== '/disclaimer') {
+        navigate('/disclaimer', { replace: true });
+      }
+    } else if (activeBlogSlug) {
+      const blogPath = `/blog/${activeBlogSlug}`;
+      if (location.pathname !== blogPath) {
+        navigate(blogPath, { replace: true });
+      }
+    } else if (blogListOpen) {
+      if (location.pathname !== '/blog') {
+        navigate('/blog', { replace: true });
       }
     } else if (privacyPolicyOpen) {
       if (location.pathname !== '/privacy-policy') {
@@ -266,7 +404,21 @@ function AppContent() {
         navigate(catPath, { replace: true });
       }
     }
-  }, [activeTool, adminPanelOpen, selectedCategory, notFoundSlug, privacyPolicyOpen, location.pathname, navigate]);
+  }, [
+    activeTool, 
+    aboutOpen, 
+    contactOpen, 
+    termsOpen, 
+    disclaimerOpen, 
+    activeBlogSlug, 
+    blogListOpen, 
+    adminPanelOpen, 
+    selectedCategory, 
+    notFoundSlug, 
+    privacyPolicyOpen, 
+    location.pathname, 
+    navigate
+  ]);
 
   const handleGoHome = useCallback(() => {
     setActiveTool(null);
@@ -275,16 +427,103 @@ function AppContent() {
     setMemberOnlyFilter(false);
     setAdminPanelOpen(false);
     setPrivacyPolicyOpen(false);
+    setAboutOpen(false);
+    setContactOpen(false);
+    setTermsOpen(false);
+    setDisclaimerOpen(false);
+    setBlogListOpen(false);
+    setActiveBlogSlug(null);
     navigate('/');
   }, [navigate]);
 
   const handleOpenPrivacyPolicy = useCallback(() => {
     setPrivacyPolicyOpen(true);
+    setAboutOpen(false);
+    setContactOpen(false);
+    setTermsOpen(false);
+    setDisclaimerOpen(false);
+    setBlogListOpen(false);
+    setActiveBlogSlug(null);
     setActiveTool(null);
     setSelectedCategory(null);
     setNotFoundSlug(null);
     setAdminPanelOpen(false);
     navigate('/privacy-policy');
+  }, [navigate]);
+
+  const handleOpenAbout = useCallback(() => {
+    setAboutOpen(true);
+    setPrivacyPolicyOpen(false);
+    setContactOpen(false);
+    setTermsOpen(false);
+    setDisclaimerOpen(false);
+    setBlogListOpen(false);
+    setActiveBlogSlug(null);
+    setActiveTool(null);
+    setSelectedCategory(null);
+    setNotFoundSlug(null);
+    setAdminPanelOpen(false);
+    navigate('/about');
+  }, [navigate]);
+
+  const handleOpenContact = useCallback(() => {
+    setContactOpen(true);
+    setAboutOpen(false);
+    setPrivacyPolicyOpen(false);
+    setTermsOpen(false);
+    setDisclaimerOpen(false);
+    setBlogListOpen(false);
+    setActiveBlogSlug(null);
+    setActiveTool(null);
+    setSelectedCategory(null);
+    setNotFoundSlug(null);
+    setAdminPanelOpen(false);
+    navigate('/contact');
+  }, [navigate]);
+
+  const handleOpenTerms = useCallback(() => {
+    setTermsOpen(true);
+    setAboutOpen(false);
+    setContactOpen(false);
+    setPrivacyPolicyOpen(false);
+    setDisclaimerOpen(false);
+    setBlogListOpen(false);
+    setActiveBlogSlug(null);
+    setActiveTool(null);
+    setSelectedCategory(null);
+    setNotFoundSlug(null);
+    setAdminPanelOpen(false);
+    navigate('/terms');
+  }, [navigate]);
+
+  const handleOpenDisclaimer = useCallback(() => {
+    setDisclaimerOpen(true);
+    setAboutOpen(false);
+    setContactOpen(false);
+    setPrivacyPolicyOpen(false);
+    setTermsOpen(false);
+    setBlogListOpen(false);
+    setActiveBlogSlug(null);
+    setActiveTool(null);
+    setSelectedCategory(null);
+    setNotFoundSlug(null);
+    setAdminPanelOpen(false);
+    navigate('/disclaimer');
+  }, [navigate]);
+
+  const handleOpenBlog = useCallback(() => {
+    setBlogListOpen(true);
+    setActiveBlogSlug(null);
+    setAboutOpen(false);
+    setContactOpen(false);
+    setPrivacyPolicyOpen(false);
+    setTermsOpen(false);
+    setDisclaimerOpen(false);
+    setActiveTool(null);
+    setSelectedCategory(null);
+    setNotFoundSlug(null);
+    setAdminPanelOpen(false);
+    navigate('/blog');
   }, [navigate]);
 
   const handleOpenAdmin = useCallback(() => {
@@ -436,8 +675,12 @@ function AppContent() {
           onOpenFavorites={() => setFavoritesDrawerOpen(true)}
           onOpenAuth={() => setAuthModalOpen(true)}
           onOpenAdmin={() => setAdminPanelOpen(true)}
+          onOpenDashboard={() => setDashboardOpen(true)}
           onOpenProfile={() => setUserProfileModalOpen(true)}
           onOpenHelp={() => setCheatSheetOpen(true)}
+          onOpenBlog={handleOpenBlog}
+          onOpenAbout={handleOpenAbout}
+          onOpenContact={handleOpenContact}
           onSelectCategory={handleSelectCategory}
           onGoHome={handleGoHome}
           darkMode={darkMode}
@@ -462,6 +705,7 @@ function AppContent() {
             onOpenSearch={() => setSearchModalOpen(true)}
             onOpenFavorites={() => setFavoritesDrawerOpen(true)}
             onOpenAuth={() => setAuthModalOpen(true)}
+            onOpenDashboard={() => setDashboardOpen(true)}
             onOpenHelp={() => setCheatSheetOpen(true)}
             onSelectTool={handleSelectTool}
             darkMode={darkMode}
@@ -479,6 +723,48 @@ function AppContent() {
                     requestedSlug={notFoundSlug}
                     onGoHome={handleGoHome}
                     onSelectTool={handleSelectTool}
+                  />
+                </div>
+              ) : aboutOpen ? (
+                <div key="about-page" className="w-full animate-in fade-in duration-200">
+                  <AboutPage
+                    onGoHome={handleGoHome}
+                    onOpenContact={handleOpenContact}
+                  />
+                </div>
+              ) : contactOpen ? (
+                <div key="contact-page" className="w-full animate-in fade-in duration-200">
+                  <ContactPage
+                    onGoHome={handleGoHome}
+                  />
+                </div>
+              ) : termsOpen ? (
+                <div key="terms-page" className="w-full animate-in fade-in duration-200">
+                  <TermsPage
+                    onGoHome={handleGoHome}
+                  />
+                </div>
+              ) : disclaimerOpen ? (
+                <div key="disclaimer-page" className="w-full animate-in fade-in duration-200">
+                  <DisclaimerPage
+                    onGoHome={handleGoHome}
+                  />
+                </div>
+              ) : activeBlogSlug ? (
+                <div key={`blog-${activeBlogSlug}`} className="w-full animate-in fade-in duration-200">
+                  <BlogPostPage
+                    slug={activeBlogSlug}
+                    onGoHome={handleGoHome}
+                    onGoToBlogList={handleOpenBlog}
+                    onSelectArticle={(slug) => navigate(`/blog/${slug}`)}
+                    onSelectTool={handleSelectTool}
+                  />
+                </div>
+              ) : blogListOpen ? (
+                <div key="blog-list" className="w-full animate-in fade-in duration-200">
+                  <BlogListPage
+                    onGoHome={handleGoHome}
+                    onSelectArticle={(slug) => navigate(`/blog/${slug}`)}
                   />
                 </div>
               ) : privacyPolicyOpen ? (
@@ -528,7 +814,7 @@ function AppContent() {
                       {user && (
                         <div className="pt-2">
                           <span className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium">
-                            Signed in as: <strong className="text-slate-900 dark:text-white">{maskEmail(user.email)}</strong> (Standard Member)
+                            Signed in as: <strong className="text-slate-900 dark:text-white">{user.email}</strong> (Standard Member)
                           </span>
                         </div>
                       )}
@@ -589,6 +875,11 @@ function AppContent() {
               onOpenAdmin={() => setAdminPanelOpen(true)}
               onOpenHelp={() => setCheatSheetOpen(true)}
               onOpenPrivacyPolicy={handleOpenPrivacyPolicy}
+              onOpenAbout={handleOpenAbout}
+              onOpenContact={handleOpenContact}
+              onOpenTerms={handleOpenTerms}
+              onOpenDisclaimer={handleOpenDisclaimer}
+              onOpenBlog={handleOpenBlog}
             />
           </div>
         </div>
@@ -632,6 +923,19 @@ function AppContent() {
           onClose={() => setUserProfileModalOpen(false)}
           onSelectTool={handleSelectTool}
           onOpenAdmin={() => setAdminPanelOpen(true)}
+        />
+
+        {/* Personal Dashboard Hub & Cloud Stack Modal */}
+        <PersonalDashboardModal
+          isOpen={dashboardOpen}
+          onClose={() => setDashboardOpen(false)}
+          onSelectTool={handleSelectTool}
+          onOpenAuth={() => setAuthModalOpen(true)}
+        />
+
+        {/* Gentle Guest Login Cloud Sync Prompt */}
+        <GuestLoginPrompt
+          onOpenAuth={() => setAuthModalOpen(true)}
         />
 
         <KeyboardCheatSheetModal

@@ -1,5 +1,7 @@
-import { TOOLS_DATA, CATEGORIES } from '../data/toolsData';
+import { CATEGORIES } from '../data/toolsData';
 import { getSiteOrigin, getBasePath } from './seoConfig';
+import { getIndexableTools } from '../config/indexableTools';
+import { getAllBlogArticles } from '../data/blogArticles';
 
 export interface SitemapURLItem {
   loc: string;
@@ -9,7 +11,8 @@ export interface SitemapURLItem {
 }
 
 /**
- * Generate a complete array of all public, indexable URLs for the sitemap
+ * Generate a curated array of ONLY approved, high-value, indexable URLs for the sitemap.
+ * Non-indexable tools are strictly excluded to satisfy Google AdSense "Low value content" criteria.
  */
 export function getAllSitemapURLs(customOrigin?: string): SitemapURLItem[] {
   const origin = customOrigin || getSiteOrigin();
@@ -37,24 +40,31 @@ export function getAllSitemapURLs(customOrigin?: string): SitemapURLItem[] {
   // 1. Homepage
   addUrl(`${origin}${basePath}/`, 'daily', '1.0');
 
-  // 2. Legal / Compliance Pages (Privacy Policy)
+  // 2. Core Compliance & Company Pages (Required by Google AdSense)
+  addUrl(`${origin}${basePath}/about`, 'monthly', '0.8');
+  addUrl(`${origin}${basePath}/contact`, 'monthly', '0.8');
   addUrl(`${origin}${basePath}/privacy-policy`, 'monthly', '0.7');
+  addUrl(`${origin}${basePath}/terms`, 'monthly', '0.7');
+  addUrl(`${origin}${basePath}/disclaimer`, 'monthly', '0.7');
 
-  // 3. Category Pages
+  // 3. Blog Learning Hub
+  addUrl(`${origin}${basePath}/blog`, 'daily', '0.9');
+
+  // 4. In-Depth Editorial Blog Articles (10 Masterclasses)
+  const articles = getAllBlogArticles();
+  for (const article of articles) {
+    addUrl(`${origin}${basePath}/blog/${article.slug}`, 'weekly', '0.85');
+  }
+
+  // 5. Category Hub Pages
   for (const cat of CATEGORIES) {
     addUrl(`${origin}${basePath}/category/${cat.id}`, 'weekly', '0.8');
   }
 
-  // 4. Individual Tool Pages (All 1,200 public tools)
-  for (const tool of TOOLS_DATA) {
-    // Real URL path for every tool (e.g. /compress-pdf, /image-resizer)
-    const subpath = `/${tool.slug}`;
-
-    // Popular/Trending tools get higher priority in Google crawl budget
-    const isHighPriority = tool.popular || tool.trending || tool.badge === 'Popular';
-    const priority = isHighPriority ? '0.9' : '0.8';
-
-    addUrl(`${origin}${basePath}${subpath}`, 'weekly', priority);
+  // 6. Top 40 High-Value Indexable Tools (ONLY these are exposed to Google index)
+  const indexableTools = getIndexableTools();
+  for (const tool of indexableTools) {
+    addUrl(`${origin}${basePath}/${tool.slug}`, 'weekly', '0.9');
   }
 
   return urls;
