@@ -312,7 +312,8 @@ function AppContent() {
     }
 
     if (toolSlug) {
-      const found = getToolBySlugDynamic(toolSlug);
+      const normalizedSlug = toolSlug === 'loan-emi' ? 'emi-calculator' : toolSlug;
+      const found = getToolBySlugDynamic(normalizedSlug);
       if (found) {
         resetAllViews();
         setActiveTool(found);
@@ -361,8 +362,10 @@ function AppContent() {
   // Sync active view with URL via React Router navigate
   useEffect(() => {
     if (activeTool) {
-      const targetPath = `/${activeTool.slug}`;
-      if (location.pathname !== targetPath) {
+      const targetPath = activeTool.category === 'calculator'
+        ? `/calculators/${activeTool.slug}`
+        : `/tools/${activeTool.slug}`;
+      if (location.pathname !== targetPath && location.pathname !== `/${activeTool.slug}`) {
         navigate(targetPath, { replace: true });
       }
     } else if (aboutOpen) {

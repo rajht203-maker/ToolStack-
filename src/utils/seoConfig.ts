@@ -338,7 +338,7 @@ export function getHomeSEOConfig(customOrigin?: string): PageSEOConfig {
   return {
     name: 'ToolStack',
     slug: '',
-    description: 'ToolStack offers 1,200 free, private online tools for PDF, image, text, developer utilities, and calculators.',
+    description: 'ToolStack offers free, private online tools for PDF, image, text, developer utilities, and calculators.',
     category: 'all',
     keywords: [
       'free online tools',
@@ -352,9 +352,9 @@ export function getHomeSEOConfig(customOrigin?: string): PageSEOConfig {
     ],
     canonicalUrl,
     indexable: true,
-    h1: 'ToolStack – 1,200 Free Online Web Tools & Utilities',
-    seoTitle: 'ToolStack - 1,200 Free Online Tools & Utilities',
-    seoDescription: 'Access 1,200 free online tools for PDF merging, image compression, calculators, unit conversions, and dev utilities. 100% private, client-side, zero signup.',
+    h1: 'ToolStack – Free Online PDF, Image, Text & Calculator Tools',
+    seoTitle: 'ToolStack - Free Online PDF, Image, Text & Calculator Tools',
+    seoDescription: 'Free online tools for PDF merging, image compression, text manipulation, code formatting, and financial calculations. 100% private, client-side, zero signup.',
     relatedTools: ['pdf-merge', 'pdf-compress', 'image-compressor', 'percentage-calculator'],
     structuredData
   };

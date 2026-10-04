@@ -16,6 +16,7 @@ import {
   TOOL_CLICK_EVENT 
 } from '../../utils/toolAnalytics';
 import { HomeHelmetSEO } from '../seo/HomeHelmetSEO';
+import { getIndexableTools } from '../../config/indexableTools';
 import { 
   Search, 
   Sparkles, 
@@ -123,17 +124,15 @@ export const HomePage: React.FC<HomePageProps> = ({
     });
   }, [activeTools, selectedCategory, searchQuery, memberOnlyFilter]);
 
-  // Trending / popular tools for hero strip
-  const trendingTools = useMemo(() => {
-    return activeTools.filter(t => t.trending || t.popular).slice(0, 4);
-  }, [activeTools]);
+  // Top 40 indexable tools (featured for high value and AdSense compliance)
+  const top40Tools = useMemo(() => getIndexableTools(), []);
 
   return (
     <div className="space-y-12 pb-16">
       {/* Homepage SEO & Structured Data */}
-      <HomeHelmetSEO toolCount={activeTools.length} />
+      <HomeHelmetSEO toolCount={top40Tools.length} />
 
-      {/* Hero Section with Problem Solver Bar */}
+      {/* Hero Section with Search */}
       <section className="relative overflow-hidden pt-10 sm:pt-14 pb-8 text-center px-4">
         {/* Subtle background glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-500/5 blur-3xl rounded-full pointer-events-none" />
@@ -141,11 +140,11 @@ export const HomePage: React.FC<HomePageProps> = ({
         <div className="relative max-w-4xl mx-auto space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-widest shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-            <span>{activeTools.length} Working Tools • Local In-Browser Processing</span>
+            <span>Free Web Utilities • 100% In-Browser Execution</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-slate-900 dark:text-white">
-            ToolStack – Free Online Web Tools &amp; Utilities
+            ToolStack – Free Online PDF, Image, Text &amp; Calculator Tools
           </h1>
 
           <p className="text-sm sm:text-base lg:text-lg text-slate-500 dark:text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
@@ -160,12 +159,12 @@ export const HomePage: React.FC<HomePageProps> = ({
             {[
               { name: 'PDF Merge', slug: 'pdf-merge', category: 'pdf' },
               { name: 'Image Compressor', slug: 'image-compressor', category: 'image' },
-              { name: 'Loan EMI', slug: 'loan-emi', category: 'calculator' },
+              { name: 'Loan EMI', slug: 'emi-calculator', category: 'calculator' },
               { name: 'QR Code Generator', slug: 'qr-generator', category: 'image' },
               { name: 'JSON Formatter', slug: 'json-formatter', category: 'developer' },
               { name: 'Word Counter', slug: 'word-counter', category: 'text' }
             ].map((t) => {
-              const href = `/${t.slug}`;
+              const href = t.category === 'calculator' ? `/calculators/${t.slug}` : `/tools/${t.slug}`;
               return (
                 <a
                   key={t.slug}
@@ -188,17 +187,6 @@ export const HomePage: React.FC<HomePageProps> = ({
           {/* Search Mode Switcher Tabs */}
           <div className="flex items-center justify-center gap-2 pt-2">
             <button
-              onClick={() => setSearchMode('problem')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                searchMode === 'problem'
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-none'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Problem Solver Search</span>
-            </button>
-            <button
               onClick={() => setSearchMode('standard')}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
                 searchMode === 'standard'
@@ -208,6 +196,17 @@ export const HomePage: React.FC<HomePageProps> = ({
             >
               <Search className="w-3.5 h-3.5" />
               <span>Standard Tool Search</span>
+            </button>
+            <button
+              onClick={() => setSearchMode('problem')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                searchMode === 'problem'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-none'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Problem Solver Search</span>
             </button>
           </div>
 
@@ -224,7 +223,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search 1,000+ tools (PDF, Image, Business Card, QR Logo, SQL, Regex...)"
+                  placeholder="Search tools (PDF, Image, JSON, Calculators, Converters, Base64...)"
                   className="w-full pl-12 pr-28 py-3.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400"
                 />
                 <button
@@ -249,7 +248,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </span>
             <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
               <Zap className="w-4 h-4 text-amber-500" />
-              {activeTools.length} Working Tools
+              Free Online Tools
             </span>
             {/* Custom Tools Theme Pill */}
             <button
@@ -521,6 +520,61 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>Instant local hardware execution</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Editorial Explainer Section: About ToolStack, Privacy & Usage (350+ words for AdSense & Google Indexation) */}
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
+          <div className="space-y-2 border-b border-slate-100 dark:border-slate-800 pb-5">
+            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+              Comprehensive Utility Suite
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              About ToolStack – Free Online PDF, Image, Text &amp; Calculator Tools
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
+              ToolStack is an all-in-one suite of modern, high-performance web utilities built for professionals, students, creators, and everyday internet users. Designed with a strict client-side first architecture, ToolStack empowers you to merge PDFs, compress high-resolution images, format complex JSON code, calculate loan EMIs, convert units, and generate secure passwords without installation, watermarks, or account registration.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2.5">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                1
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                100% Client-Side &amp; Private
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Traditional online converters upload your confidential contracts, medical scans, spreadsheets, and private images to remote third-party cloud servers. ToolStack takes a radically different approach: every calculation and document conversion takes place 100% inside your web browser using HTML5 Canvas, WebAssembly, and local JavaScript memory. Your files never leave your computer or phone.
+              </p>
+            </div>
+
+            <div className="space-y-2.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                2
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Six Essential Tool Suites
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Our suite covers essential digital tasks: PDF tools (merge, split, compress, watermark, rotate), Image tools (lossless compression, format converter, resizer, crop), Developer tools (JSON validator, Base64 encoder, UUID generator, diff checker), Text tools (word counter, case converter, slug generator), and Financial calculators (Loan EMI, Compound Interest, GST, BMI).
+              </p>
+            </div>
+
+            <div className="space-y-2.5">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                3
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Instant Execution in 3 Steps
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Using ToolStack is effortless: (1) Pick your desired utility from the top tools list or category directory, (2) Drag and drop your file or enter your data into the workspace, and (3) Click process to receive your output instantly. There are no wait times, queue delays, file size paywalls, or forced email signups.
+              </p>
             </div>
           </div>
         </div>

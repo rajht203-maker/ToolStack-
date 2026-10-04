@@ -64,7 +64,8 @@ export function getAllSitemapURLs(customOrigin?: string): SitemapURLItem[] {
   // 6. Top 40 High-Value Indexable Tools (ONLY these are exposed to Google index)
   const indexableTools = getIndexableTools();
   for (const tool of indexableTools) {
-    addUrl(`${origin}${basePath}/${tool.slug}`, 'weekly', '0.9');
+    const subpath = tool.category === 'calculator' ? `/calculators/${tool.slug}` : `/tools/${tool.slug}`;
+    addUrl(`${origin}${basePath}${subpath}`, 'weekly', '0.9');
   }
 
   return urls;

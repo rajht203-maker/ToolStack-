@@ -6,10 +6,10 @@ interface HomeHelmetSEOProps {
   toolCount: number;
 }
 
-export const HomeHelmetSEO: React.FC<HomeHelmetSEOProps> = ({ toolCount }) => {
+export const HomeHelmetSEO: React.FC<HomeHelmetSEOProps> = () => {
   const origin = getSiteOrigin();
-  const title = `ToolStack - ${toolCount} Free Online Tools & Utilities`;
-  const description = `Access ${toolCount} free online tools for PDF merging, image compression, calculators, converters, and dev utilities. 100% private with instant results.`;
+  const title = 'ToolStack - Free Online PDF, Image, Text & Calculator Tools';
+  const description = 'Free online tools for PDF merging, image compression, text manipulation, code formatting, and financial calculations. 100% private, client-side, zero signup.';
   const canonicalUrl = `${origin}/`;
   const ogImage = `${origin}/og-image.png`;
 

@@ -158,17 +158,17 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <a
-                  href="/calculators/loan-emi"
+                  href="/calculators/emi-calculator"
                   onClick={(e) => {
                     if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
                       e.preventDefault();
-                      window.history.pushState({}, '', '/calculators/loan-emi');
+                      window.history.pushState({}, '', '/calculators/emi-calculator');
                       window.dispatchEvent(new PopStateEvent('popstate'));
                     }
                   }}
                   className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block"
                 >
-                  Loan EMI & Compound Interest
+                  Loan EMI &amp; Compound Interest
                 </a>
               </li>
               <li>

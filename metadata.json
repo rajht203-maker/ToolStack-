@@ -1,6 +1,6 @@
 {
   "name": "ToolStack",
-  "description": "ToolStack offers 1,200 free, private online tools for PDF, image, text, developer utilities, and calculators. Fast, secure, and client-side with zero install.",
+  "description": "ToolStack offers free, private online tools for PDF, image, text, developer utilities, and calculators. Fast, secure, and client-side with zero install.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
