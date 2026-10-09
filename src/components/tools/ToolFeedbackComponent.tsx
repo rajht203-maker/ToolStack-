@@ -351,11 +351,38 @@ export const ToolFeedbackComponent: React.FC<ToolFeedbackComponentProps> = ({
             </div>
           </div>
 
-          {/* Row 3: Details Description */}
+          {/* Row 3: Quick Tags & Details Description */}
           <div className="space-y-2">
+            <div>
+              <span className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+                Quick 1-Click Suggestions (Tap to insert):
+              </span>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {[
+                  { label: '🚀 Worked perfectly!', text: 'Tool worked perfectly as expected!', type: 'rating' as FeedbackType },
+                  { label: '⚡ Super fast & responsive', text: 'Super fast, saved me a lot of time!', type: 'rating' as FeedbackType },
+                  { label: '🎯 Clean & accurate output', text: 'Accurate and clean output formatting.', type: 'rating' as FeedbackType },
+                  { label: '💡 Request improvement', text: 'Feature suggestion: ', type: 'improvement' as FeedbackType },
+                  { label: '🐞 Report an issue', text: 'Issue encountered: ', type: 'bug_report' as FeedbackType },
+                ].map((tag) => (
+                  <button
+                    key={tag.label}
+                    type="button"
+                    onClick={() => {
+                      setComment(tag.text);
+                      setFeedbackType(tag.type);
+                    }}
+                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/60 text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 border border-slate-200/80 dark:border-slate-700/80 transition-all cursor-pointer"
+                  >
+                    {tag.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="flex items-center justify-between">
               <label htmlFor="feedback-comment" className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                3. {feedbackType === 'bug_report' ? 'Describe the issue or error' : feedbackType === 'improvement' ? 'Describe your suggested improvement' : 'Optional comments or notes'}
+                3. {feedbackType === 'bug_report' ? 'Describe the issue or error (Optional)' : feedbackType === 'improvement' ? 'Describe your suggested improvement (Optional)' : 'Comments or notes (Optional)'}
               </label>
               <span className={`text-[11px] font-mono ${comment.length > 900 ? 'text-amber-500 font-bold' : 'text-slate-400'}`}>
                 {comment.length} / 1000
@@ -369,10 +396,10 @@ export const ToolFeedbackComponent: React.FC<ToolFeedbackComponentProps> = ({
               onChange={(e) => setComment(e.target.value.slice(0, 1000))}
               placeholder={
                 feedbackType === 'bug_report'
-                  ? 'E.g., "When uploading a 15MB scanned PDF with images, the split button timed out with a memory error..."'
+                  ? 'E.g., "When uploading a 15MB scanned PDF with images, the split button timed out..."'
                   : feedbackType === 'improvement'
-                  ? 'E.g., "Add an option to customize the DPI output to 300 for commercial printing, or batch download in a ZIP file..."'
-                  : 'Share what you enjoyed or any tips for other users...'
+                  ? 'E.g., "Add an option to customize the DPI output or batch download..."'
+                  : 'Share what you enjoyed or leave blank to submit your rating directly...'
               }
               className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all resize-none font-medium"
             />

@@ -145,7 +145,7 @@ export interface AdminAuditLog {
   createdAt: string;
 }
 
-export type FeedbackType = 'rating' | 'bug_report' | 'improvement';
+export type FeedbackType = 'rating' | 'bug_report' | 'improvement' | 'suggestion' | 'new_tool';
 
 export interface ToolFeedback {
   id: string;
@@ -158,6 +158,7 @@ export interface ToolFeedback {
   userId: string;
   userEmail?: string;
   userName?: string;
+  isPrivate?: boolean;
   status: 'pending' | 'reviewed' | 'resolved';
   createdAt: string;
 }

@@ -138,6 +138,7 @@
         "userId": { "type": "string", "maxLength": 128 },
         "userEmail": { "type": "string", "maxLength": 256 },
         "userName": { "type": "string", "maxLength": 128 },
+        "isPrivate": { "type": "boolean" },
         "status": { "type": "string", "enum": ["pending", "reviewed", "resolved"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },

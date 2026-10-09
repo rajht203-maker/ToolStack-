@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ToolItem } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useTools } from '../../context/ToolsContext';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { submitToolFeedback } from '../../services/feedbackService';
 import { 
   X, 
   MessageSquare, 
@@ -72,40 +71,38 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   const targetTool = tools.find(t => t.id === selectedToolId);
   const targetToolName = selectedToolId === 'general' ? 'ToolStack Platform & General' : targetTool?.name || 'Selected Tool';
 
+  const QUICK_MODAL_TAGS = [
+    { label: '🚀 Great tool!', text: 'Great tool, worked as expected!' },
+    { label: '⚡ Super fast', text: 'Super fast and responsive!' },
+    { label: '🎯 Accurate & clean', text: 'Accurate and clean output.' },
+    { label: '💡 Feature request', text: 'Feature request: ' },
+    { label: '🐞 Bug report', text: 'Bug encountered: ' },
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!comment.trim()) {
-      setErrorMessage('Please describe your feedback, suggestion, or bug report.');
-      return;
-    }
+    const finalComment = comment.trim() || `Rated ${rating} out of 5 stars`;
 
     setIsSubmitting(true);
     setErrorMessage(null);
 
     try {
-      const feedbackId = `fb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-      
-      // When keepPrivate is true (default), absolutely NO email, name, or userId is attached
+      // When keepPrivate is true (default), absolutely NO email, name, or personal userId is attached
       const finalEmail = keepPrivate ? '' : userEmail.trim();
       const finalName = keepPrivate ? 'Anonymous Member' : (userName.trim() || 'Community Member');
       const finalUserId = keepPrivate ? 'anonymous' : (user?.uid || 'guest');
 
-      const feedbackDoc = {
-        feedbackId,
+      await submitToolFeedback({
         toolId: selectedToolId || 'general',
         toolName: targetToolName,
         rating,
         type: feedbackType,
-        comment: comment.trim(),
-        status: 'pending',
+        comment: finalComment,
         userId: finalUserId,
         userEmail: finalEmail,
         userName: finalName,
         isPrivate: keepPrivate,
-        createdAt: new Date().toISOString()
-      };
-
-      await setDoc(doc(db, 'tool_feedback', feedbackId), feedbackDoc);
+      });
 
       try {
         confetti({
@@ -269,22 +266,49 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 </div>
               </div>
 
+              {/* Quick Tags / 1-Click Suggestions */}
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1.5">
+                  Quick Feedback (Tap to auto-fill)
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {QUICK_MODAL_TAGS.map((tag) => (
+                    <button
+                      key={tag.label}
+                      type="button"
+                      onClick={() => {
+                        setComment(tag.text);
+                        if (tag.label.includes('Bug')) {
+                          setFeedbackType('bug_report');
+                        } else if (tag.label.includes('Feature')) {
+                          setFeedbackType('improvement');
+                        } else {
+                          setFeedbackType('rating');
+                        }
+                      }}
+                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/60 text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 border border-slate-200/80 dark:border-slate-700/80 transition-all cursor-pointer"
+                    >
+                      {tag.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Feedback Content */}
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  Description / Details <span className="text-rose-500">*</span>
+                  Comments or Details <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <textarea
-                  rows={4}
-                  required
+                  rows={3}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder={
                     feedbackType === 'bug_report'
-                      ? 'Describe what happened, any error messages, or steps to reproduce...'
+                      ? 'Describe what happened (optional)...'
                       : feedbackType === 'new_tool'
-                      ? 'What tool would you like added? How should it work?'
-                      : 'Share your suggestion or improvement idea...'
+                      ? 'What tool would you like added (optional)?'
+                      : 'Share your thoughts, suggestions, or leave blank to submit rating...'
                   }
                   className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 leading-relaxed"
                 />

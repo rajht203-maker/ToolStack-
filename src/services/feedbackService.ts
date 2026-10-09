@@ -23,6 +23,7 @@ export interface SubmitFeedbackParams {
   userId?: string;
   userEmail?: string;
   userName?: string;
+  isPrivate?: boolean;
 }
 
 /**
@@ -35,7 +36,8 @@ export async function submitToolFeedback(params: SubmitFeedbackParams): Promise<
   // Privacy-first: NEVER silently harvest currentUser?.email or displayName without explicit consent
   const userEmail = params.userEmail ? params.userEmail.trim().slice(0, 256) : '';
   const userName = params.userName ? params.userName.trim().slice(0, 128) : 'Anonymous Member';
-  const userId = userEmail ? (auth.currentUser?.uid || params.userId || 'member') : 'anonymous';
+  const isPrivate = params.isPrivate !== undefined ? params.isPrivate : (!userEmail && params.userId === 'anonymous');
+  const userId = params.userId || (userEmail && auth.currentUser?.uid ? auth.currentUser.uid : 'anonymous');
   const nowIso = new Date().toISOString();
 
   // Sanitize and trim comment to declared blueprint constraint (1,000 chars)
@@ -53,6 +55,7 @@ export async function submitToolFeedback(params: SubmitFeedbackParams): Promise<
     userId,
     userEmail,
     userName,
+    isPrivate,
     status: 'pending',
     createdAt: nowIso,
   };

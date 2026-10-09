@@ -29,7 +29,8 @@ import {
   orderBy, 
   limit, 
   serverTimestamp,
-  onSnapshot
+  onSnapshot,
+  getDocFromServer
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 export { getFriendlyAuthErrorMessage } from '../utils/authErrors';
@@ -128,5 +129,19 @@ export async function testConnection(): Promise<boolean> {
     }
     return false;
   }
+}
+
+async function testConnectionBoot() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration.");
+    }
+  }
+}
+
+if (typeof window !== 'undefined') {
+  testConnectionBoot();
 }
 

@@ -83,6 +83,16 @@ function writeStaticPage(
 
   const outFile = path.join(targetDir, 'index.html');
   fs.writeFileSync(outFile, pageHtml, 'utf-8');
+
+  // Also write direct .html file for Vercel cleanUrls support (e.g. /about -> about.html, /tools/pdf-merge -> tools/pdf-merge.html)
+  if (subpath && subpath.trim() !== '') {
+    const directHtmlPath = path.join(distDir, `${subpath}.html`);
+    const directParent = path.dirname(directHtmlPath);
+    if (!fs.existsSync(directParent)) {
+      fs.mkdirSync(directParent, { recursive: true });
+    }
+    fs.writeFileSync(directHtmlPath, pageHtml, 'utf-8');
+  }
 }
 
 // Global Nav Header HTML

@@ -5,6 +5,7 @@ import { IconRenderer } from '../common/IconRenderer';
 import { ToolDispatcher } from './ToolDispatcher';
 import { ToolCard } from './ToolCard';
 import { ToolFeedbackComponent } from './ToolFeedbackComponent';
+import { QuickToolRatingBar } from './QuickToolRatingBar';
 import { MultiplexAd } from '../ads/MultiplexAd';
 import { InFeedAd } from '../ads/InFeedAd';
 import { getRelatedTools, CATEGORIES } from '../../data/toolsData';
@@ -722,6 +723,9 @@ export const ToolView: React.FC<ToolViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* Quick 1-Click Rating & Feedback Bar */}
+      <QuickToolRatingBar tool={tool} />
 
       {/* In-Depth Overview & Target Audience (For Indexable High-Value Tools) */}
       {customContent && (
