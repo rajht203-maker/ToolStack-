@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, PDFName, PDFRawStream } from 'pdf-lib';
 import JSZip from 'jszip';
 import { 
   Upload, 
@@ -168,6 +168,56 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ tool, onSuccess }) => {
     }
   };
 
+  // Helper to recompress raw JPEG bytes inside PDF XObjects
+  const compressJpegBytes = async (jpegBytes: Uint8Array, quality = 0.72): Promise<Uint8Array | null> => {
+    return new Promise((resolve) => {
+      try {
+        const blob = new Blob([jpegBytes], { type: 'image/jpeg' });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const scale = img.width > 1600 || img.height > 1600 ? 0.75 : 1.0;
+            canvas.width = Math.max(1, Math.round(img.width * scale));
+            canvas.height = Math.max(1, Math.round(img.height * scale));
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              URL.revokeObjectURL(url);
+              return resolve(null);
+            }
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(
+              async (newBlob) => {
+                URL.revokeObjectURL(url);
+                if (newBlob) {
+                  const buf = await newBlob.arrayBuffer();
+                  resolve(new Uint8Array(buf));
+                } else {
+                  resolve(null);
+                }
+              },
+              'image/jpeg',
+              quality
+            );
+          } catch {
+            URL.revokeObjectURL(url);
+            resolve(null);
+          }
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+        img.src = url;
+      } catch {
+        resolve(null);
+      }
+    });
+  };
+
   // --- 3. PDF COMPRESS ---
   const processPdfCompress = async () => {
     if (files.length === 0) {
@@ -178,46 +228,138 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ tool, onSuccess }) => {
     setError(null);
 
     try {
-      const originalSize = files[0].size;
-      const arrayBuffer = await files[0].arrayBuffer();
-      const sourcePdf = await PDFDocument.load(arrayBuffer);
+      const originalFile = files[0];
+      const originalSize = originalFile.size;
+      const arrayBuffer = await originalFile.arrayBuffer();
+
+      // Load with ignoreEncryption to avoid throwing on permissions
+      let sourcePdf: PDFDocument;
+      try {
+        sourcePdf = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+      } catch (err: any) {
+        throw new Error('Could not open PDF. The file may be password encrypted or corrupted.');
+      }
 
       // Target calculations if in target mode
       const targetBytes = compressMode === 'target'
         ? (compressUnit === 'MB' ? targetSize * 1024 * 1024 : targetSize * 1024)
         : null;
 
-      // Save with object stream compression and clean structure
-      const compressedBytes = await sourcePdf.save({
-        useObjectStreams: true,
-        addDefaultPage: false,
-        objectsPerTick: 50
-      });
+      // Aggressively recompress embedded JPEG images if document is image-heavy or target demands it
+      const shouldCompressImages =
+        (compressMode === 'target' && targetBytes && originalSize > targetBytes) ||
+        (compressMode === 'preset' && (compressionLevel === 'high' || compressionLevel === 'medium'));
 
-      const blob = new Blob([compressedBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const savedBytes = Math.max(0, originalSize - blob.size);
-      const percentSaved = Math.max(0, Math.round((savedBytes / originalSize) * 100));
+      if (shouldCompressImages) {
+        try {
+          const context = sourcePdf.context;
+          const indirectObjects = context.enumerateIndirectObjects();
+          const q = compressMode === 'preset'
+            ? (compressionLevel === 'high' ? 0.55 : 0.75)
+            : Math.max(0.4, Math.min(0.85, (targetBytes || originalSize) / originalSize));
 
-      const sizeKb = (blob.size / 1024).toFixed(1);
-      const sizeMb = (blob.size / (1024 * 1024)).toFixed(2);
-      
-      let statusSummary = `${sizeKb} KB (${sizeMb} MB) • Saved ~${percentSaved}%`;
+          for (const [, obj] of indirectObjects) {
+            if (obj instanceof PDFRawStream) {
+              const subtype = obj.dict.get(PDFName.of('Subtype'));
+              if (subtype && subtype.toString() === '/Image') {
+                const filter = obj.dict.get(PDFName.of('Filter'));
+                const isJpeg = filter && (filter.toString() === '/DCTDecode' || filter.toString() === '/DCT');
+                if (isJpeg && obj.contents.length > 25 * 1024) {
+                  const smallerBytes = await compressJpegBytes(obj.contents, q);
+                  if (smallerBytes && smallerBytes.length < obj.contents.length) {
+                    (obj as any).contents = smallerBytes;
+                    (obj as any).dict.set(PDFName.of('Length'), sourcePdf.context.obj(smallerBytes.length));
+                  }
+                }
+              }
+            }
+          }
+        } catch (imgErr) {
+          console.warn('Embedded image optimization note:', imgErr);
+        }
+      }
+
+      // 1. Try clean rebuild (stripping duplicate xrefs and metadata headers)
+      let candidate1Bytes: Uint8Array | null = null;
+      try {
+        const cleanDoc = await PDFDocument.create();
+        const pageIndices = sourcePdf.getPageIndices();
+        const copiedPages = await cleanDoc.copyPages(sourcePdf, pageIndices);
+        copiedPages.forEach((p) => cleanDoc.addPage(p));
+        cleanDoc.setTitle('');
+        cleanDoc.setAuthor('');
+        cleanDoc.setSubject('');
+        cleanDoc.setKeywords([]);
+        cleanDoc.setProducer('');
+        cleanDoc.setCreator('');
+        candidate1Bytes = await cleanDoc.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          objectsPerTick: 50,
+        });
+      } catch (cleanErr) {
+        console.warn('Clean doc rebuild failed, using direct save:', cleanErr);
+      }
+
+      // 2. Try direct object stream save
+      let candidate2Bytes: Uint8Array | null = null;
+      try {
+        candidate2Bytes = await sourcePdf.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          objectsPerTick: 50,
+        });
+      } catch (sourceErr) {
+        console.warn('Direct source save failed:', sourceErr);
+      }
+
+      // Pick the smallest valid byte array
+      let finalBytes: Uint8Array;
+      if (candidate1Bytes && candidate2Bytes) {
+        finalBytes = candidate1Bytes.length <= candidate2Bytes.length ? candidate1Bytes : candidate2Bytes;
+      } else if (candidate1Bytes) {
+        finalBytes = candidate1Bytes;
+      } else if (candidate2Bytes) {
+        finalBytes = candidate2Bytes;
+      } else {
+        throw new Error('PDF optimization could not generate a valid file.');
+      }
+
+      // Never deliver an output that became bigger than the original uploaded file
+      let finalBlob: Blob;
+      let actualSavedBytes: number;
+      if (finalBytes.length < originalSize) {
+        finalBlob = new Blob([finalBytes], { type: 'application/pdf' });
+        actualSavedBytes = originalSize - finalBlob.size;
+      } else {
+        // If already maximally compressed, use original arrayBuffer with optimal metadata
+        finalBlob = new Blob([arrayBuffer], { type: 'application/pdf' });
+        actualSavedBytes = 0;
+      }
+
+      const url = URL.createObjectURL(finalBlob);
+      const percentSaved = Math.max(0, Math.round((actualSavedBytes / originalSize) * 100));
+      const sizeKb = (finalBlob.size / 1024).toFixed(1);
+      const sizeMb = (finalBlob.size / (1024 * 1024)).toFixed(2);
+
+      let statusSummary = `${sizeKb} KB (${sizeMb} MB) • Reduced by ${percentSaved}%`;
       if (compressMode === 'target' && targetBytes) {
-        if (blob.size <= targetBytes) {
+        if (finalBlob.size <= targetBytes) {
           statusSummary += ` • ✓ Under ${targetSize} ${compressUnit} target`;
         } else {
           statusSummary += ` • Optimized to closest possible limit`;
         }
+      } else if (actualSavedBytes === 0) {
+        statusSummary = `${sizeKb} KB (${sizeMb} MB) • Already maximally optimized`;
       }
 
       setResultUrl(url);
-      setResultName(`compressed-${files[0].name}`);
+      setResultName(`compressed-${originalFile.name}`);
       setResultSize(statusSummary);
-      onSuccess(`Compressed ${files[0].name} to ${sizeKb} KB (${sizeMb} MB) - reduced by ${percentSaved}%.`);
+      onSuccess(`Processed ${originalFile.name}: ${sizeKb} KB (${sizeMb} MB) - reduced by ${percentSaved}%.`);
     } catch (err: any) {
-      console.error(err);
-      setError('Unable to compress this PDF. The document may already be maximally compressed.');
+      console.error('PDF compression error:', err);
+      setError(err.message || 'Unable to compress this PDF. The document may already be maximally compressed.');
     } finally {
       setIsProcessing(false);
     }

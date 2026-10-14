@@ -117,90 +117,115 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ tool, onSuccess }) => {
   const handleCompress = () => {
     if (!selectedImage) return;
     setIsProcessing(true);
+    setError(null);
+
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (selectedImage.startsWith('http')) {
+      img.crossOrigin = 'anonymous';
+    }
+
     img.onload = () => {
-      const mimeType = 'image/jpeg';
-      let bestDataUrl = '';
-      let bestSizeInBytes = 0;
+      try {
+        const mimeType = 'image/jpeg';
+        let bestDataUrl = '';
+        let bestSizeInBytes = 0;
 
-      if (compressMode === 'quality') {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(img, 0, 0);
-        bestDataUrl = canvas.toDataURL(mimeType, quality / 100);
-        bestSizeInBytes = getBase64Bytes(bestDataUrl);
-      } else {
-        // Target File Size Mode (User selects KB or MB)
-        const targetBytes = compressUnit === 'MB' ? targetSize * 1024 * 1024 : targetSize * 1024;
-        
-        // Iteratively search for the highest quality that stays strictly within the target size.
-        // If image is huge, downsample dimensions in steps to guarantee meeting the target.
-        const scales = [1.0, 0.85, 0.7, 0.55, 0.4, 0.25];
-        let matched = false;
-
-        for (const scale of scales) {
+        if (compressMode === 'quality') {
           const canvas = document.createElement('canvas');
-          canvas.width = Math.max(1, Math.round(img.width * scale));
-          canvas.height = Math.max(1, Math.round(img.height * scale));
-          const ctx = canvas.getContext('2d')!;
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('Canvas 2D context unavailable.');
+          
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
 
-          let low = 0.05;
-          let high = 0.96;
-          let bestCandidateUrl = '';
-          let bestCandidateSize = 0;
+          bestDataUrl = canvas.toDataURL(mimeType, Math.max(0.05, Math.min(1, quality / 100)));
+          bestSizeInBytes = getBase64Bytes(bestDataUrl);
+        } else {
+          // Target File Size Mode (User selects KB or MB)
+          const targetBytes = compressUnit === 'MB' ? targetSize * 1024 * 1024 : targetSize * 1024;
+          
+          // Test progressively downscaling if needed
+          const scales = [1.0, 0.9, 0.8, 0.7, 0.55, 0.4, 0.3, 0.2, 0.1];
+          let bestUrl = '';
+          let bestBytes = Infinity;
 
-          // 8-step binary search for precision
-          for (let iter = 0; iter < 8; iter++) {
-            const midQ = (low + high) / 2;
-            const candidateUrl = canvas.toDataURL(mimeType, midQ);
-            const candidateBytes = getBase64Bytes(candidateUrl);
+          for (const scale of scales) {
+            const w = Math.max(1, Math.round(img.width * scale));
+            const h = Math.max(1, Math.round(img.height * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) continue;
 
-            if (candidateBytes <= targetBytes) {
-              bestCandidateUrl = candidateUrl;
-              bestCandidateSize = candidateBytes;
-              low = midQ; // try higher quality while staying under target
+            // Paint white background so transparent PNGs don't turn black in JPEG
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, w, h);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, w, h);
+
+            // Binary search for optimal quality between 0.05 and 0.95
+            let lowQ = 0.05;
+            let highQ = 0.95;
+            let scaleBestUrl = '';
+            let scaleBestBytes = 0;
+
+            for (let iter = 0; iter < 8; iter++) {
+              const midQ = (lowQ + highQ) / 2;
+              const candidateUrl = canvas.toDataURL(mimeType, midQ);
+              const candidateBytes = getBase64Bytes(candidateUrl);
+
+              if (candidateBytes <= targetBytes) {
+                scaleBestUrl = candidateUrl;
+                scaleBestBytes = candidateBytes;
+                lowQ = midQ; // try higher quality while staying under target
+              } else {
+                highQ = midQ;
+              }
+            }
+
+            if (scaleBestUrl && scaleBestBytes <= targetBytes) {
+              bestUrl = scaleBestUrl;
+              bestBytes = scaleBestBytes;
+              break; // found the highest resolution meeting target
             } else {
-              high = midQ; // too big, reduce quality
+              // Record smallest candidate at this scale
+              const minQUrl = canvas.toDataURL(mimeType, 0.05);
+              const minQBytes = getBase64Bytes(minQUrl);
+              if (minQBytes < bestBytes) {
+                bestUrl = minQUrl;
+                bestBytes = minQBytes;
+              }
             }
           }
 
-          if (bestCandidateUrl && bestCandidateSize <= targetBytes) {
-            bestDataUrl = bestCandidateUrl;
-            bestSizeInBytes = bestCandidateSize;
-            matched = true;
-            break;
-          } else if (!bestDataUrl || (bestCandidateSize > 0 && bestCandidateSize < bestSizeInBytes)) {
-            bestDataUrl = canvas.toDataURL(mimeType, 0.08);
-            bestSizeInBytes = getBase64Bytes(bestDataUrl);
-          }
+          bestDataUrl = bestUrl || canvasRef.current?.toDataURL(mimeType, 0.05) || '';
+          bestSizeInBytes = bestBytes === Infinity ? getBase64Bytes(bestDataUrl) : bestBytes;
         }
 
-        // Fallback if very strict target
-        if (!bestDataUrl) {
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.max(1, Math.round(img.width * 0.2));
-          canvas.height = Math.max(1, Math.round(img.height * 0.2));
-          const ctx = canvas.getContext('2d')!;
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          bestDataUrl = canvas.toDataURL(mimeType, 0.05);
-          bestSizeInBytes = getBase64Bytes(bestDataUrl);
-        }
+        setCompressedUrl(bestDataUrl);
+        setCompressedSize(bestSizeInBytes);
+
+        const kb = (bestSizeInBytes / 1024).toFixed(1);
+        const mb = (bestSizeInBytes / (1024 * 1024)).toFixed(2);
+        onSuccess(`Compressed image to ${kb} KB (${mb} MB).`);
+      } catch (err: any) {
+        console.error('Compressor error:', err);
+        setError(err.message || 'Failed to compress image.');
+      } finally {
+        setIsProcessing(false);
       }
-
-      setCompressedUrl(bestDataUrl);
-      setCompressedSize(bestSizeInBytes);
-      setIsProcessing(false);
-
-      const kb = (bestSizeInBytes / 1024).toFixed(1);
-      const mb = (bestSizeInBytes / (1024 * 1024)).toFixed(2);
-      onSuccess(`Compressed image to ${kb} KB (${mb} MB).`);
     };
+
+    img.onerror = () => {
+      setIsProcessing(false);
+      setError('Could not decode or process image.');
+    };
+
     img.src = selectedImage;
   };
 
@@ -208,21 +233,33 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ tool, onSuccess }) => {
   const handleResize = () => {
     if (!selectedImage) return;
     setIsProcessing(true);
+    setError(null);
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (selectedImage.startsWith('http')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
-      const ctx = canvas.getContext('2d')!;
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext('2d')!;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
-      const resizedDataUrl = canvas.toDataURL('image/png');
-      setResizedUrl(resizedDataUrl);
+        const resizedDataUrl = canvas.toDataURL('image/png');
+        setResizedUrl(resizedDataUrl);
+        onSuccess(`Resized image to ${targetWidth}x${targetHeight}px.`);
+      } catch (err: any) {
+        setError(err.message || 'Failed to resize image.');
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    img.onerror = () => {
       setIsProcessing(false);
-      onSuccess(`Resized image to ${targetWidth}x${targetHeight}px.`);
+      setError('Failed to load image for resizing.');
     };
     img.src = selectedImage;
   };
@@ -236,20 +273,36 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ tool, onSuccess }) => {
   const handleFormatConvert = () => {
     if (!selectedImage) return;
     setIsProcessing(true);
+    setError(null);
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (selectedImage.startsWith('http')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0);
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d')!;
+        if (targetFormat === 'image/jpeg') {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(img, 0, 0);
 
-      const dataUrl = canvas.toDataURL(targetFormat, 0.92);
-      setConvertedUrl(dataUrl);
+        const dataUrl = canvas.toDataURL(targetFormat, 0.92);
+        setConvertedUrl(dataUrl);
+        const ext = targetFormat.split('/')[1];
+        onSuccess(`Converted image to ${ext.toUpperCase()}.`);
+      } catch (err: any) {
+        setError(err.message || 'Failed to convert image format.');
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    img.onerror = () => {
       setIsProcessing(false);
-      const ext = targetFormat.split('/')[1];
-      onSuccess(`Converted image to ${ext.toUpperCase()}.`);
+      setError('Failed to load image for conversion.');
     };
     img.src = selectedImage;
   };

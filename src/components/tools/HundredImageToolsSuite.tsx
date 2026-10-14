@@ -97,10 +97,15 @@ export const HundredImageToolsSuite: React.FC<HundredImageToolsSuiteProps> = ({ 
         const src = ev.target?.result as string;
         setImageSrc(src);
         const img = new Image();
-        img.crossOrigin = 'anonymous';
+        if (src.startsWith('http')) {
+          img.crossOrigin = 'anonymous';
+        }
         img.onload = () => {
           originalImgRef.current = img;
           renderToolEffect(img);
+        };
+        img.onerror = () => {
+          console.error('Failed to load image in HundredImageToolsSuite');
         };
         img.src = src;
       };
@@ -436,13 +441,18 @@ export const HundredImageToolsSuite: React.FC<HundredImageToolsSuiteProps> = ({ 
       const targetBytes = compressUnit === 'MB' ? targetFileSize * 1024 * 1024 : targetFileSize * 1024;
       const mimeType = 'image/jpeg';
       let bestDataUrl = '';
-      let bestSizeInBytes = 0;
+      let bestSizeInBytes = Infinity;
 
-      const scales = [1.0, 0.85, 0.7, 0.55, 0.4, 0.25];
+      const scales = [1.0, 0.9, 0.8, 0.7, 0.55, 0.4, 0.3, 0.2, 0.1];
       for (const scale of scales) {
-        canvas.width = Math.max(1, Math.round(img.width * scale));
-        canvas.height = Math.max(1, Math.round(img.height * scale));
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        canvas.width = w;
+        canvas.height = h;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
 
         let low = 0.05;
         let high = 0.96;
@@ -467,11 +477,17 @@ export const HundredImageToolsSuite: React.FC<HundredImageToolsSuiteProps> = ({ 
 
         if (bestCandidateUrl && bestCandidateSize <= targetBytes) {
           bestDataUrl = bestCandidateUrl;
-          bestSizeInBytes = candidateBytesToKb(bestCandidateSize);
-          break;
-        } else if (!bestDataUrl || (bestCandidateSize > 0 && bestCandidateSize < bestSizeInBytes)) {
-          bestDataUrl = canvas.toDataURL(mimeType, 0.08);
           bestSizeInBytes = bestCandidateSize;
+          break;
+        } else {
+          const minQUrl = canvas.toDataURL(mimeType, 0.05);
+          const base64Str = minQUrl.split(',')[1] || '';
+          const padding = base64Str.endsWith('==') ? 2 : base64Str.endsWith('=') ? 1 : 0;
+          const minQBytes = Math.max(0, Math.round((base64Str.length * 3) / 4) - padding);
+          if (minQBytes < bestSizeInBytes) {
+            bestDataUrl = minQUrl;
+            bestSizeInBytes = minQBytes;
+          }
         }
       }
 
