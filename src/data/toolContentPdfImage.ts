@@ -78,12 +78,13 @@ export const PDF_IMAGE_CONTENT: Record<string, TopToolContent> = {
     inDepthOverview: 'PDF Compress eliminates file size bloat while safeguarding legible typography and visual clarity. Government web portals, job application boards, and corporate mail exchange servers frequently enforce strict 2MB or 5MB attachment limits. ToolStack analyzes embedded bitmap images, strips redundant metadata tags, and optimizes internal stream structures to shed up to 80% of excess file weight.',
     stepByStepGuide: [
       'Drag your oversized PDF document into the compression staging area.',
-      'Select your preferred balance between file size reduction and image resolution.',
-      'Review the calculated savings and projected output weight.',
+      'Choose Target Size mode (select KB or MB and enter your limit, e.g. 500 KB or 2 MB) or pick a preset optimization level.',
+      'Review the calculated savings and projected output weight in both KB and MB.',
       'Click "Compress PDF" to run local stream optimization in browser memory.',
       'Download your lightened document and upload with confidence to any restrictive portal.'
     ],
     keyBenefits: [
+      { title: 'Custom KB & MB Target Sizing', description: 'Select exact KB or MB file limits (e.g. 200KB, 500KB, 1MB, 2MB, 5MB) required by strict portals.' },
       { title: 'Overcomes Strict Upload Limits', description: 'Easily drops 20MB scanned documents below 2MB or 5MB email and portal constraints.' },
       { title: 'Intelligent Font Subsetting', description: 'Discards unreferenced font tables and redundant metadata while retaining crisp readability.' },
       { title: 'Private & Secure', description: 'Never uploads sensitive tax paperwork, pay stubs, or resumes to public cloud servers.' }
@@ -94,6 +95,7 @@ export const PDF_IMAGE_CONTENT: Record<string, TopToolContent> = {
       { title: 'Email Attachment Optimization', description: 'Prevent bounced emails caused by restrictive corporate inbox attachment ceilings.' }
     ],
     faqs: [
+      { question: 'Can I choose between KB and MB for target PDF compression?', answer: 'Yes! ToolStack allows you to toggle between KB and MB, enter custom target limits (e.g. 200 KB, 1 MB, 2 MB), or use 1-click preset sizes.' },
       { question: 'How much file size reduction can I expect?', answer: 'Scanned image-heavy documents routinely achieve 50% to 80% reduction, while text-only PDFs usually compress by 15% to 40%.' },
       { question: 'Will my text become blurry or unreadable?', answer: 'No. Text characters are stored as vector glyphs and remain razor-sharp at any zoom level.' },
       { question: 'Can I compress a password-protected PDF?', answer: 'You must remove the password first using our Unlock PDF tool before compressing.' },
@@ -334,22 +336,24 @@ export const PDF_IMAGE_CONTENT: Record<string, TopToolContent> = {
     inDepthOverview: 'Image Compressor shrinks heavy PNG, JPEG, and WebP graphics by up to 85% without perceptible loss of sharpness. Bloated image assets are the number one cause of sluggish web page loading, poor Google Core Web Vitals, and abandoned shopping carts. ToolStack employs advanced perceptual quantization and chroma subsampling algorithms inside HTML5 Canvas, giving you surgical control over quality versus file footprint.',
     stepByStepGuide: [
       'Drop your high-resolution PNG, JPG, or WebP images into the upload area.',
-      'Use the interactive slider to balance compression ratio and visual fidelity.',
-      'Inspect the side-by-side preview showing before-and-after file weights and zoom clarity.',
-      'Click "Compress Images" to execute local bicubic re-encoding.',
+      'Select Target File Size mode (toggle between KB and MB, e.g. 100 KB, 200 KB, or 1 MB) or choose Manual Quality percentage.',
+      'Inspect the side-by-side preview showing before-and-after file weights in both KB and MB.',
+      'Click "Compress Image" to execute local bicubic re-encoding.',
       'Download your featherweight image assets individually or in a single ZIP.'
     ],
     keyBenefits: [
+      { title: 'Select KB or MB Target Limit', description: 'Compress images to exact target limits (e.g. 50 KB, 100 KB, 200 KB for passport/visa uploads, or 1 MB, 2 MB for documents).' },
       { title: 'Core Web Vitals Optimization', description: 'Drastically slashes Largest Contentful Paint (LCP) times for higher SEO rankings.' },
       { title: 'Perceptual Quality Matching', description: 'Removes invisible high-frequency data while maintaining razor-sharp edges.' },
       { title: 'Zero Cloud Upload Delay', description: 'Compresses large batches directly on your GPU/CPU via native canvas rendering.' }
     ],
     useCases: [
       { title: 'E-Commerce Product Catalogs', description: 'Compress Shopify, WooCommerce, or Amazon inventory images for snappy mobile shopping.' },
-      { title: 'Blog & Editorial Publishing', description: 'Optimize article hero banners and infographics to speed up WordPress and Ghost sites.' },
+      { title: 'Government & Portal Photo Uploads', description: 'Meet strict 100KB, 200KB, or 500KB limits on visa, passport, and job portals.' },
       { title: 'Email Marketing Campaigns', description: 'Keep promotional email newsletters under the 102KB Gmail clipping threshold.' }
     ],
     faqs: [
+      { question: 'Can I compress images to specific KB or MB sizes?', answer: 'Yes! ToolStack features a dedicated Target Size mode where you can select KB or MB, enter any target number (or pick 1-click presets like 100 KB or 200 KB), and the tool automatically optimizes the file to stay under that limit.' },
       { question: 'What compression format gives the highest space savings?', answer: 'WebP format generally delivers 25% to 35% smaller file sizes than standard JPEG at equivalent visual quality.' },
       { question: 'Can I compress multiple images at the same time?', answer: 'Yes. You can upload batches of images and compress them simultaneously with consistent settings.' },
       { question: 'Are my private photos uploaded to ToolStack servers?', answer: 'Never. Canvas and WebAssembly compress every image right on your computer or smartphone.' },

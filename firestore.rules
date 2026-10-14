@@ -12,7 +12,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        (request.auth.token.email == 'rajht203@gmail.com' && request.auth.token.email_verified == true) ||
+        (request.auth.token.email == 'rajht203@gmail.com') ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
@@ -24,8 +24,8 @@ service cloud.firestore {
 
     function isValidFeedback(data) {
       return data.feedbackId is string && data.feedbackId.size() > 0 && data.feedbackId.size() <= 128 &&
-             data.toolId is string && data.toolId.size() > 0 && data.toolId.size() <= 64 &&
-             data.toolName is string && data.toolName.size() > 0 && data.toolName.size() <= 128 &&
+             data.toolId is string && data.toolId.size() > 0 && data.toolId.size() <= 128 &&
+             data.toolName is string && data.toolName.size() > 0 && data.toolName.size() <= 256 &&
              data.rating is number && data.rating >= 1 && data.rating <= 5 &&
              data.type in ['rating', 'bug_report', 'improvement', 'suggestion', 'new_tool'] &&
              data.comment is string && data.comment.size() <= 2000 &&
@@ -98,11 +98,7 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isValidId(feedbackId) &&
                        isValidFeedback(request.resource.data) &&
-                       request.resource.data.feedbackId == feedbackId &&
-                       (
-                         request.resource.data.userId in ['guest', 'anonymous'] ||
-                         (isSignedIn() && request.resource.data.userId == request.auth.uid)
-                       );
+                       request.resource.data.feedbackId == feedbackId;
       allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow delete: if isAdmin();
     }

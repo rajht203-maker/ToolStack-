@@ -60,6 +60,7 @@ export const AllWorldPdfToolsSuite: React.FC<AllWorldPdfToolsSuiteProps> = ({ to
   const [fontSize, setFontSize] = useState<number>(14);
   const [marginSize, setMarginSize] = useState<number>(36);
   const [splitSizeLimit, setSplitSizeLimit] = useState<number>(10);
+  const [splitSizeUnit, setSplitSizeUnit] = useState<'KB' | 'MB'>('MB');
   const [delimiterWord, setDelimiterWord] = useState<string>('Invoice #:');
   const [watermarkText, setWatermarkText] = useState<string>('CONFIDENTIAL - MEMBER VERIFIED');
   const [opacityLevel, setOpacityLevel] = useState<number>(0.25);
@@ -1060,19 +1061,85 @@ export const AllWorldPdfToolsSuite: React.FC<AllWorldPdfToolsSuiteProps> = ({ to
           )}
 
           {tool.id === 'pdf-split-by-target-size' && (
-            <div>
-              <label className="block text-xs text-slate-600 dark:text-slate-300 font-medium mb-1">
-                Target Chunk Size Limit: {splitSizeLimit} MB
-              </label>
-              <input
-                type="range"
-                min="2"
-                max="50"
-                step="1"
-                value={splitSizeLimit}
-                onChange={(e) => setSplitSizeLimit(parseInt(e.target.value))}
-                className="w-full accent-violet-600"
-              />
+            <div className="space-y-2 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider">
+                  Target Chunk Size Limit:
+                </label>
+                <div className="inline-flex rounded-lg p-0.5 bg-slate-200 dark:bg-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (splitSizeUnit !== 'KB') {
+                        setSplitSizeUnit('KB');
+                        setSplitSizeLimit(prev => Math.round(prev * 1000) || 500);
+                      }
+                    }}
+                    className={`px-2 py-0.5 text-xs font-bold rounded ${
+                      splitSizeUnit === 'KB' ? 'bg-violet-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    KB
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (splitSizeUnit !== 'MB') {
+                        setSplitSizeUnit('MB');
+                        setSplitSizeLimit(prev => Math.max(1, Math.round(prev / 1000)) || 10);
+                      }
+                    }}
+                    className={`px-2 py-0.5 text-xs font-bold rounded ${
+                      splitSizeUnit === 'MB' ? 'bg-violet-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    MB
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={splitSizeUnit === 'KB' ? 100 : 1}
+                  max={splitSizeUnit === 'KB' ? 100000 : 100}
+                  step={splitSizeUnit === 'KB' ? 100 : 1}
+                  value={splitSizeLimit}
+                  onChange={(e) => setSplitSizeLimit(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-800 dark:text-white"
+                />
+                <span className="text-xs font-extrabold text-violet-600 dark:text-violet-400">
+                  {splitSizeUnit}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {splitSizeUnit === 'KB' ? (
+                  [200, 500, 800, 1000].map(k => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => setSplitSizeLimit(k)}
+                      className={`px-2 py-0.5 text-[11px] rounded border ${
+                        splitSizeLimit === k ? 'bg-violet-600 text-white border-violet-600' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {k} KB
+                    </button>
+                  ))
+                ) : (
+                  [2, 5, 10, 25, 50].map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setSplitSizeLimit(m)}
+                      className={`px-2 py-0.5 text-[11px] rounded border ${
+                        splitSizeLimit === m ? 'bg-violet-600 text-white border-violet-600' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {m} MB
+                    </button>
+                  ))
+                )}
+              </div>
             </div>
           )}
 

@@ -68,6 +68,8 @@ export const HundredImageToolsSuite: React.FC<HundredImageToolsSuiteProps> = ({ 
   const [captionText, setCaptionText] = useState<string>('Summer Roadtrip 2026');
   const [topMemeText, setTopMemeText] = useState<string>('WHEN THE CODE COMPILES');
   const [bottomMemeText, setBottomMemeText] = useState<string>('ON THE FIRST TRY');
+  const [compressUnit, setCompressUnit] = useState<'KB' | 'MB'>('KB');
+  const [targetFileSize, setTargetFileSize] = useState<number>(200);
   const [targetKbLimit, setTargetKbLimit] = useState<number>(200);
   const [currentKbSize, setCurrentKbSize] = useState<number | null>(null);
   const [vhsDate, setVhsDate] = useState<string>("'98 06 14");
@@ -429,7 +431,59 @@ export const HundredImageToolsSuite: React.FC<HundredImageToolsSuiteProps> = ({ 
       }
     }
 
-    // 13. General Canvas Fallback for all other 38 image tools
+    // 13. Target File Size Compressor (KB or MB)
+    else if (toolId === 'image-file-size-target-compressor') {
+      const targetBytes = compressUnit === 'MB' ? targetFileSize * 1024 * 1024 : targetFileSize * 1024;
+      const mimeType = 'image/jpeg';
+      let bestDataUrl = '';
+      let bestSizeInBytes = 0;
+
+      const scales = [1.0, 0.85, 0.7, 0.55, 0.4, 0.25];
+      for (const scale of scales) {
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        let low = 0.05;
+        let high = 0.96;
+        let bestCandidateUrl = '';
+        let bestCandidateSize = 0;
+
+        for (let iter = 0; iter < 8; iter++) {
+          const midQ = (low + high) / 2;
+          const candidateUrl = canvas.toDataURL(mimeType, midQ);
+          const base64Str = candidateUrl.split(',')[1] || '';
+          const padding = base64Str.endsWith('==') ? 2 : base64Str.endsWith('=') ? 1 : 0;
+          const candidateBytes = Math.max(0, Math.round((base64Str.length * 3) / 4) - padding);
+
+          if (candidateBytes <= targetBytes) {
+            bestCandidateUrl = candidateUrl;
+            bestCandidateSize = candidateBytes;
+            low = midQ;
+          } else {
+            high = midQ;
+          }
+        }
+
+        if (bestCandidateUrl && bestCandidateSize <= targetBytes) {
+          bestDataUrl = bestCandidateUrl;
+          bestSizeInBytes = candidateBytesToKb(bestCandidateSize);
+          break;
+        } else if (!bestDataUrl || (bestCandidateSize > 0 && bestCandidateSize < bestSizeInBytes)) {
+          bestDataUrl = canvas.toDataURL(mimeType, 0.08);
+          bestSizeInBytes = bestCandidateSize;
+        }
+      }
+
+      if (bestDataUrl) {
+        setDownloadUrl(bestDataUrl);
+        setCurrentKbSize(Math.round(bestSizeInBytes / 1024));
+        setOutputFileName(`target-${targetFileSize}${compressUnit.toLowerCase()}-${fileName.replace(/\.[^/.]+$/, '')}.jpg`);
+        return;
+      }
+    }
+
+    // 14. General Canvas Fallback for all other image tools
     else {
       canvas.width = img.width;
       canvas.height = img.height;
@@ -468,6 +522,8 @@ export const HundredImageToolsSuite: React.FC<HundredImageToolsSuiteProps> = ({ 
     setOutputFileName(`${tool.slug}-${fileName.replace(/\.[^/.]+$/, '')}.png`);
   };
 
+  const candidateBytesToKb = (bytes: number) => bytes;
+
   // Re-run effect when slider changes
   useEffect(() => {
     if (originalImgRef.current) {
@@ -482,7 +538,9 @@ export const HundredImageToolsSuite: React.FC<HundredImageToolsSuiteProps> = ({ 
     aspectRatioPad,
     cornerRounding,
     glitchShift,
-    thresholdCutoff
+    thresholdCutoff,
+    compressUnit,
+    targetFileSize
   ]);
 
   const handleDownload = () => {
@@ -697,6 +755,113 @@ export const HundredImageToolsSuite: React.FC<HundredImageToolsSuiteProps> = ({ 
                   onChange={(e) => setThresholdCutoff(parseInt(e.target.value))}
                   className="w-full mt-2 accent-amber-600"
                 />
+              </div>
+            )}
+
+            {tool.id === 'image-file-size-target-compressor' && (
+              <div className="space-y-3.5 bg-amber-50/60 dark:bg-amber-950/30 p-3.5 rounded-xl border border-amber-200/80 dark:border-amber-800/60">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                    Target File Size Limit:
+                  </label>
+                  {/* KB / MB Unit Switcher */}
+                  <div className="inline-flex items-center gap-1 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (compressUnit !== 'KB') {
+                          setCompressUnit('KB');
+                          setTargetFileSize(prev => Math.round(prev * 1000) || 200);
+                        }
+                      }}
+                      className={`px-2.5 py-0.5 text-xs font-extrabold rounded transition-all ${
+                        compressUnit === 'KB'
+                          ? 'bg-amber-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                      }`}
+                    >
+                      KB
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (compressUnit !== 'MB') {
+                          setCompressUnit('MB');
+                          setTargetFileSize(prev => Math.max(0.1, Number((prev / 1000).toFixed(2))) || 1);
+                        }
+                      }}
+                      className={`px-2.5 py-0.5 text-xs font-extrabold rounded transition-all ${
+                        compressUnit === 'MB'
+                          ? 'bg-amber-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                      }`}
+                    >
+                      MB
+                    </button>
+                  </div>
+                </div>
+
+                {/* Number Input */}
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={compressUnit === 'KB' ? 10 : 0.05}
+                    max={compressUnit === 'KB' ? 50000 : 50}
+                    step={compressUnit === 'KB' ? 10 : 0.1}
+                    value={targetFileSize}
+                    onChange={(e) => setTargetFileSize(Math.max(0.01, parseFloat(e.target.value) || 0))}
+                    className="w-full pl-3 pr-14 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-amber-600 dark:text-amber-400 uppercase">
+                    {compressUnit}
+                  </span>
+                </div>
+
+                {/* Quick Presets */}
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-wider">
+                    Quick Presets ({compressUnit}):
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {compressUnit === 'KB' ? (
+                      [50, 100, 200, 500, 1000].map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => setTargetFileSize(k)}
+                          className={`px-2 py-0.5 text-[11px] font-semibold rounded border transition-all ${
+                            targetFileSize === k
+                              ? 'bg-amber-600 text-white border-amber-600 font-bold'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {k} KB
+                        </button>
+                      ))
+                    ) : (
+                      [0.2, 0.5, 1, 2, 5, 10].map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setTargetFileSize(m)}
+                          className={`px-2 py-0.5 text-[11px] font-semibold rounded border transition-all ${
+                            targetFileSize === m
+                              ? 'bg-amber-600 text-white border-amber-600 font-bold'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {m} MB
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {currentKbSize && (
+                  <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
+                    Current size: <strong>{currentKbSize} KB</strong> ({(currentKbSize / 1024).toFixed(2)} MB)
+                  </div>
+                )}
               </div>
             )}
 

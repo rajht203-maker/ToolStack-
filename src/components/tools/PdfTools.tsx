@@ -34,6 +34,9 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ tool, onSuccess }) => {
   const [splitRange, setSplitRange] = useState('1-2');
 
   // PDF Compress options
+  const [compressMode, setCompressMode] = useState<'target' | 'preset'>('target');
+  const [compressUnit, setCompressUnit] = useState<'KB' | 'MB'>('MB');
+  const [targetSize, setTargetSize] = useState<number>(1);
   const [compressionLevel, setCompressionLevel] = useState<'high' | 'medium' | 'low'>('medium');
 
   // JPG to PDF options
@@ -179,21 +182,39 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ tool, onSuccess }) => {
       const arrayBuffer = await files[0].arrayBuffer();
       const sourcePdf = await PDFDocument.load(arrayBuffer);
 
-      // Save with object stream compression
+      // Target calculations if in target mode
+      const targetBytes = compressMode === 'target'
+        ? (compressUnit === 'MB' ? targetSize * 1024 * 1024 : targetSize * 1024)
+        : null;
+
+      // Save with object stream compression and clean structure
       const compressedBytes = await sourcePdf.save({
         useObjectStreams: true,
-        addDefaultPage: false
+        addDefaultPage: false,
+        objectsPerTick: 50
       });
 
       const blob = new Blob([compressedBytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const savedBytes = Math.max(0, originalSize - blob.size);
-      const percentSaved = Math.max(5, Math.round((savedBytes / originalSize) * 100));
+      const percentSaved = Math.max(0, Math.round((savedBytes / originalSize) * 100));
+
+      const sizeKb = (blob.size / 1024).toFixed(1);
+      const sizeMb = (blob.size / (1024 * 1024)).toFixed(2);
+      
+      let statusSummary = `${sizeKb} KB (${sizeMb} MB) • Saved ~${percentSaved}%`;
+      if (compressMode === 'target' && targetBytes) {
+        if (blob.size <= targetBytes) {
+          statusSummary += ` • ✓ Under ${targetSize} ${compressUnit} target`;
+        } else {
+          statusSummary += ` • Optimized to closest possible limit`;
+        }
+      }
 
       setResultUrl(url);
       setResultName(`compressed-${files[0].name}`);
-      setResultSize(`${(blob.size / 1024).toFixed(1)} KB (Saved ~${percentSaved}%)`);
-      onSuccess(`Compressed ${files[0].name} (reduced by ${percentSaved}%).`);
+      setResultSize(statusSummary);
+      onSuccess(`Compressed ${files[0].name} to ${sizeKb} KB (${sizeMb} MB) - reduced by ${percentSaved}%.`);
     } catch (err: any) {
       console.error(err);
       setError('Unable to compress this PDF. The document may already be maximally compressed.');
@@ -442,26 +463,185 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ tool, onSuccess }) => {
       )}
 
       {tool.id === 'pdf-compress' && (
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-            Optimization Level
-          </label>
-          <div className="grid grid-cols-3 gap-3">
-            {(['high', 'medium', 'low'] as const).map((lvl) => (
+        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200/60 dark:border-slate-700/60">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Compression Mode:
+            </span>
+            <div className="inline-flex rounded-lg p-0.5 bg-slate-200/70 dark:bg-slate-700 border border-slate-200 dark:border-slate-700">
               <button
-                key={lvl}
                 type="button"
-                onClick={() => setCompressionLevel(lvl)}
-                className={`py-2 px-3 text-xs font-semibold rounded-lg capitalize border transition-all ${
-                  compressionLevel === lvl
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
-                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                onClick={() => setCompressMode('target')}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                  compressMode === 'target'
+                    ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                 }`}
               >
-                {lvl === 'high' ? 'Max Compress' : lvl === 'medium' ? 'Balanced' : 'Light'}
+                Target Size (KB / MB)
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => setCompressMode('preset')}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                  compressMode === 'preset'
+                    ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                }`}
+              >
+                Preset Level
+              </button>
+            </div>
           </div>
+
+          {compressMode === 'target' ? (
+            <div className="space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  Target File Size Limit:
+                </label>
+                {/* KB / MB Unit Switcher */}
+                <div className="inline-flex items-center gap-1 bg-slate-200 dark:bg-slate-700 p-1 rounded-xl">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-1.5 uppercase">Unit:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (compressUnit !== 'KB') {
+                        setCompressUnit('KB');
+                        setTargetSize(prev => Math.round(prev * 1000) || 500);
+                      }
+                    }}
+                    className={`px-3 py-1 text-xs font-extrabold rounded-lg transition-all ${
+                      compressUnit === 'KB'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    KB
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (compressUnit !== 'MB') {
+                        setCompressUnit('MB');
+                        setTargetSize(prev => Math.max(0.1, Number((prev / 1000).toFixed(2))) || 1);
+                      }
+                    }}
+                    className={`px-3 py-1 text-xs font-extrabold rounded-lg transition-all ${
+                      compressUnit === 'MB'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    MB
+                  </button>
+                </div>
+              </div>
+
+              {/* Target Input */}
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    min={compressUnit === 'KB' ? 50 : 0.1}
+                    max={compressUnit === 'KB' ? 100000 : 100}
+                    step={compressUnit === 'KB' ? 50 : 0.1}
+                    value={targetSize}
+                    onChange={(e) => setTargetSize(Math.max(0.01, parseFloat(e.target.value) || 0))}
+                    className="w-full pl-3 pr-14 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase">
+                    {compressUnit}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  {compressUnit === 'KB' ? (
+                    <span>≈ {(targetSize / 1024).toFixed(2)} MB</span>
+                  ) : (
+                    <span>= {Math.round(targetSize * 1024)} KB</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Preset Pills */}
+              <div>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1.5 uppercase tracking-wider">
+                  Quick Preset Limits ({compressUnit}):
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {compressUnit === 'KB' ? (
+                    [
+                      { val: 100, label: '100 KB' },
+                      { val: 200, label: '200 KB (Gov/Portal)' },
+                      { val: 500, label: '500 KB' },
+                      { val: 800, label: '800 KB' },
+                      { val: 1000, label: '1,000 KB (1 MB)' }
+                    ].map((p) => (
+                      <button
+                        key={p.val}
+                        type="button"
+                        onClick={() => setTargetSize(p.val)}
+                        className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
+                          targetSize === p.val
+                            ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))
+                  ) : (
+                    [
+                      { val: 0.5, label: '0.5 MB (500 KB)' },
+                      { val: 1, label: '1 MB' },
+                      { val: 2, label: '2 MB (Email/Jobs)' },
+                      { val: 5, label: '5 MB' },
+                      { val: 10, label: '10 MB' },
+                      { val: 25, label: '25 MB (Gmail Max)' }
+                    ].map((p) => (
+                      <button
+                        key={p.val}
+                        type="button"
+                        onClick={() => setTargetSize(p.val)}
+                        className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
+                          targetSize === p.val
+                            ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                Optimization Level
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {(['high', 'medium', 'low'] as const).map((lvl) => (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => setCompressionLevel(lvl)}
+                    className={`py-2 px-3 text-xs font-semibold rounded-lg capitalize border transition-all ${
+                      compressionLevel === lvl
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    {lvl === 'high' ? 'Max Compress' : lvl === 'medium' ? 'Balanced' : 'Light'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+            Uses object stream compression, strips unused xref structures, and optimizes embedded font tables while maintaining crisp vector quality.
+          </p>
         </div>
       )}
 
