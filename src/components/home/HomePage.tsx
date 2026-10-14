@@ -465,16 +465,8 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-4">
-              {filteredTools.map((tool, index) => (
-                <React.Fragment key={tool.id}>
-                  <ToolCard tool={tool} onSelect={handleToolSelection} />
-                  {index === 5 && filteredTools.length > 6 && (
-                    <InFeedAd key="infeed-ad-1" asCard={true} />
-                  )}
-                  {index === 23 && filteredTools.length > 24 && (
-                    <InFeedAd key="infeed-ad-2" asCard={true} />
-                  )}
-                </React.Fragment>
+              {filteredTools.map((tool) => (
+                <ToolCard key={tool.id} tool={tool} onSelect={handleToolSelection} />
               ))}
             </div>
           )}

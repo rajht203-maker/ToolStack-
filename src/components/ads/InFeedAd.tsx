@@ -50,14 +50,15 @@ export const InFeedAd: React.FC<InFeedAdProps> = ({
   if (asCard) {
     return (
       <div 
-        className={`group relative flex flex-col justify-between p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 min-h-[220px] ${className}`}
+        className={`relative flex flex-col justify-between p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-700/80 min-h-[180px] ${className}`}
+        aria-label="Advertisement"
       >
         {showLabel && (
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 pb-1 border-b border-slate-200/60 dark:border-slate-800">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Sponsored
+              Advertisement
             </span>
-            <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium">
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">
               Ad
             </span>
           </div>
@@ -78,18 +79,18 @@ export const InFeedAd: React.FC<InFeedAdProps> = ({
   }
 
   return (
-    <div className={`w-full my-6 clear-both ${className}`}>
+    <div className={`w-full my-6 clear-both ${className}`} aria-label="Advertisement">
       {showLabel && (
         <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">
-            Sponsored Story
+            Advertisement
           </span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium">
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">
             Ad
           </span>
         </div>
       )}
-      <div className="w-full overflow-hidden rounded-2xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/70 dark:border-slate-800/80 p-3 sm:p-4 text-center min-h-[140px] flex items-center justify-center transition-all duration-300">
+      <div className="w-full overflow-hidden rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/70 dark:border-slate-800/80 p-3 sm:p-4 text-center min-h-[140px] flex items-center justify-center transition-all duration-300">
         <ins
           ref={adRef}
           className="adsbygoogle"

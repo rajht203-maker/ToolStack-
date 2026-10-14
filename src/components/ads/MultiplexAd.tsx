@@ -44,13 +44,13 @@ export const MultiplexAd: React.FC<MultiplexAdProps> = ({
   }, []);
 
   return (
-    <div className={`w-full my-6 clear-both ${className}`}>
+    <div className={`w-full my-6 clear-both ${className}`} aria-label="Advertisement">
       {showLabel && (
         <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">
-            Sponsored Recommendations
+            Advertisement
           </span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">
             Ad
           </span>
         </div>

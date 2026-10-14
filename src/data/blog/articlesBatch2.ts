@@ -11,9 +11,9 @@ export const ARTICLES_BATCH_2: BlogArticle[] = [
     publishedDate: 'September 28, 2026',
     updatedDate: 'October 3, 2026',
     author: {
-      name: 'Maya Lin',
-      role: 'Staff Documentation Engineer & Technical Writer',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&h=160&q=80'
+      name: 'ToolStack Editorial Team',
+      role: 'Technical Documentation & Content Review',
+      avatar: '/icon.svg'
     },
     tableOfContents: [
       { id: 'why-text-utilities-matter', title: 'Why Text Processing Tools Are Fundamental' },
@@ -85,9 +85,9 @@ export const ARTICLES_BATCH_2: BlogArticle[] = [
     publishedDate: 'September 29, 2026',
     updatedDate: 'October 3, 2026',
     author: {
-      name: 'Elena Rostova',
-      role: 'Web Performance Engineer & Graphic Technology Specialist',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=160&h=160&q=80'
+      name: 'ToolStack Engineering Team',
+      role: 'Web Performance & Graphics Codec Research',
+      avatar: '/icon.svg'
     },
     tableOfContents: [
       { id: 'raster-vs-vector', title: 'Raster vs Vector: The Fundamental Distinction' },
@@ -163,9 +163,9 @@ export const ARTICLES_BATCH_2: BlogArticle[] = [
     publishedDate: 'September 30, 2026',
     updatedDate: 'October 3, 2026',
     author: {
-      name: 'Marcus Vance',
-      role: 'Senior Technical Editor & Document Systems Architect',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&h=160&q=80'
+      name: 'ToolStack Editorial Team',
+      role: 'Document Systems Architecture & Workflows',
+      avatar: '/icon.svg'
     },
     tableOfContents: [
       { id: 'why-combining-pdfs-matters', title: 'Why Document Aggregation Is Essential' },
@@ -253,9 +253,9 @@ export const ARTICLES_BATCH_2: BlogArticle[] = [
     publishedDate: 'October 1, 2026',
     updatedDate: 'October 3, 2026',
     author: {
-      name: 'David Thorne',
-      role: 'Cybersecurity Architect & Privacy Advocate',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&h=160&q=80'
+      name: 'ToolStack Engineering Team',
+      role: 'Information Security & Cryptographic Systems',
+      avatar: '/icon.svg'
     },
     tableOfContents: [
       { id: 'the-state-of-passwords', title: 'The Grim State of Passwords in 2026' },
@@ -340,9 +340,9 @@ export const ARTICLES_BATCH_2: BlogArticle[] = [
     publishedDate: 'October 2, 2026',
     updatedDate: 'October 3, 2026',
     author: {
-      name: 'Sarah Jenkins',
-      role: 'Content Operations Lead & Digital Publishing Consultant',
-      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=160&h=160&q=80'
+      name: 'ToolStack Editorial Team',
+      role: 'Digital Publishing & Matrix Systems Specialist',
+      avatar: '/icon.svg'
     },
     tableOfContents: [
       { id: 'the-rise-of-qr', title: 'The Global Rebirth of Quick Response Codes' },

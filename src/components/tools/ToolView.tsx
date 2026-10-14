@@ -929,13 +929,8 @@ export const ToolView: React.FC<ToolViewProps> = ({
             Related Tools You Might Like
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {relatedTools.map((relTool, idx) => (
-              <React.Fragment key={relTool.id}>
-                <ToolCard tool={relTool} onSelect={onSelectTool} />
-                {idx === 1 && relatedTools.length >= 2 && (
-                  <InFeedAd asCard={true} />
-                )}
-              </React.Fragment>
+            {relatedTools.map((relTool) => (
+              <ToolCard key={relTool.id} tool={relTool} onSelect={onSelectTool} />
             ))}
           </div>
         </div>

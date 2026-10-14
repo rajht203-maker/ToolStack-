@@ -11,9 +11,9 @@ export const ARTICLES_BATCH_1: BlogArticle[] = [
     publishedDate: 'September 15, 2026',
     updatedDate: 'October 1, 2026',
     author: {
-      name: 'Marcus Vance',
-      role: 'Senior Technical Editor & Document Systems Architect',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&h=160&q=80'
+      name: 'ToolStack Editorial Team',
+      role: 'Technical Documentation & Document Systems Review',
+      avatar: '/icon.svg'
     },
     tableOfContents: [
       { id: 'why-pdf-tools-matter', title: 'Why Reliable PDF Tools Are Vital in 2026' },
@@ -90,9 +90,9 @@ export const ARTICLES_BATCH_1: BlogArticle[] = [
     publishedDate: 'September 18, 2026',
     updatedDate: 'October 2, 2026',
     author: {
-      name: 'Elena Rostova',
-      role: 'Web Performance Engineer & Graphic Technology Specialist',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=160&h=160&q=80'
+      name: 'ToolStack Engineering Team',
+      role: 'Web Performance & Graphics Compression Review',
+      avatar: '/icon.svg'
     },
     tableOfContents: [
       { id: 'why-image-compression-matters', title: 'Why Image Optimization Dictates Web Speed' },
@@ -168,9 +168,9 @@ export const ARTICLES_BATCH_1: BlogArticle[] = [
     publishedDate: 'September 21, 2026',
     updatedDate: 'October 2, 2026',
     author: {
-      name: 'Sarah Jenkins',
-      role: 'Content Operations Lead & Digital Publishing Consultant',
-      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=160&h=160&q=80'
+      name: 'ToolStack Editorial Team',
+      role: 'Digital Publishing & Document Operations',
+      avatar: '/icon.svg'
     },
     tableOfContents: [
       { id: 'why-convert-pdf-to-word', title: 'Why Document Conversion Is Essential' },
@@ -245,9 +245,9 @@ export const ARTICLES_BATCH_1: BlogArticle[] = [
     publishedDate: 'September 24, 2026',
     updatedDate: 'October 3, 2026',
     author: {
-      name: 'David Thorne',
-      role: 'Cybersecurity Architect & Privacy Advocate',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&h=160&q=80'
+      name: 'ToolStack Engineering Team',
+      role: 'Client-Side Systems & Security Architecture',
+      avatar: '/icon.svg'
     },
     tableOfContents: [
       { id: 'the-illusion-of-cloud-privacy', title: 'The Illusion of Free Cloud Services' },
@@ -328,9 +328,9 @@ export const ARTICLES_BATCH_1: BlogArticle[] = [
     publishedDate: 'September 27, 2026',
     updatedDate: 'October 3, 2026',
     author: {
-      name: 'Alexander Sterling',
-      role: 'Chartered Financial Analyst & Quantitative Modeler',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&h=160&q=80'
+      name: 'ToolStack Editorial Team',
+      role: 'Financial Calculators & Quantitative Analytics',
+      avatar: '/icon.svg'
     },
     tableOfContents: [
       { id: 'what-is-loan-emi', title: 'What Is an Equated Monthly Installment (EMI)?' },
